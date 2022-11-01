@@ -8,11 +8,18 @@ void BasicSc2Bot::OnStep() {
 }
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit) {
+	const ObservationInterface* observation = Observation();
+
 	switch (unit->unit_type.ToType()) {
 		case UNIT_TYPEID::ZERG_LARVA: {
 			
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-			break;
+	
+			while (observation->GetFoodUsed() <= observation->GetFoodCap() - 1) {
+				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
+				break;
+			}
+
+			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
 		}
 		case UNIT_TYPEID::ZERG_DRONE: {
 			const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
@@ -50,7 +57,8 @@ bool BasicSc2Bot::TryMorphStructure(ABILITY_ID ability_type_for_structure, UNIT_
 	float rx = GetRandomScalar();
 	float ry = GetRandomScalar();
 
-	Actions()->UnitCommand(unit_to_build, ability_type_for_structure, Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f));
+	//Actions()->UnitCommand(unit_to_build, ability_type_for_structure, Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f));
+	//Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
 
 	return true;
 }
