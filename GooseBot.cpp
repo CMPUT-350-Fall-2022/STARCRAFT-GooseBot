@@ -1,9 +1,22 @@
-#include "BasicSc2Bot.h"
 #include "GooseBot.h"
 
-class GooseBot : BasicSc2Bot {
+using namespace sc2;
 
-	void OnGameStart() { return; }
+void GooseBot::OnGameStart() { return; }
 
-	void OnStep() { return; }
-};
+void GooseBot::OnStep() { 
+	
+	return; }
+
+// In your bot class.
+void GooseBot::OnUnitIdle(const Unit* unit) {
+    switch (unit->unit_type.ToType()) {
+        case UNIT_TYPEID::ZERG_LARVA: {
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+}
