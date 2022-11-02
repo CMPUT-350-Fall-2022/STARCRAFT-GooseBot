@@ -2,10 +2,43 @@
 
 void BasicSc2Bot::OnGameStart() { return; }
 
+
 void BasicSc2Bot::OnStep()
 {
     TryBuildSupplyDepot();
 }
+
+
+void BasicSc2Bot::OnGameEnd()
+{
+    const ObservationInterface* observation = Observation();
+    GameInfo gameInfo = observation->GetGameInfo();
+    auto players = std::map<uint32_t, PlayerInfo*>();
+    for (auto &playerInfo : gameInfo.player_info)
+    {
+
+        players[playerInfo.player_id] = &playerInfo;
+    }
+    
+    auto playerTypes = std::map<PlayerType, std::string>();
+    playerTypes[Participant] = "Goose";
+    playerTypes[Computer] = "Prey";
+    playerTypes[Observer] = "Observer";
+
+    auto gameResults = std::map<GameResult, std::string>();
+    gameResults[Win] = " Wins";
+    gameResults[Loss] = " Loses";
+    gameResults[Tie] = " Tied";
+    gameResults[Undecided] = " Undecided";
+
+    for (auto &playerResult : observation->GetResults())
+    {
+        std::cout << playerTypes[((*(players[playerResult.player_id])).player_type)] 
+                  << gameResults[playerResult.result]
+                  << std::endl;
+    }
+}
+
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
@@ -32,6 +65,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
             break;
     }
 }
+
 
 bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type)
 {
@@ -66,6 +100,7 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
     }
 }
 
+
 bool BasicSc2Bot::TryBuildSupplyDepot()
 {
 	const ObservationInterface* observation = Observation();
@@ -79,6 +114,7 @@ bool BasicSc2Bot::TryBuildSupplyDepot()
     // Try and build a depot. Find a random SCV and give it the order.
     return TryBuildStructure(ABILITY_ID::BUILD_SUPPLYDEPOT);
 }
+
 
 const Unit* BasicSc2Bot::FindNearestMineralPatch(const Point2D& start)
 {
