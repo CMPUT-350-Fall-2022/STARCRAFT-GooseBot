@@ -8,6 +8,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 #include "sc2api/sc2_unit.h"
 #include "cpp-sc2/include/sc2api/sc2_interfaces.h"
+#include "sc2api/sc2_unit_filters.h"
 
 using namespace sc2;
 
@@ -20,6 +21,8 @@ public:
 
 	bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
 	bool TryBuildSupplyDepot();
+	bool TryBuildBarracks();
+	size_t countUnitType(UNIT_TYPEID unit_type);
 
 	const Unit* FindNearestMineralPatch(const Point2D& start);
 

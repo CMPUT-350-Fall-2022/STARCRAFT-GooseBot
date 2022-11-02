@@ -6,6 +6,8 @@ void BasicSc2Bot::OnGameStart() { return; }
 void BasicSc2Bot::OnStep()
 {
     TryBuildSupplyDepot();
+
+    TryBuildBarracks();
 }
 
 
@@ -61,6 +63,19 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
             break;
         }
 
+        case UNIT_TYPEID::TERRAN_BARRACKS:
+        {
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+            break;
+        }
+
+        case UNIT_TYPEID::TERRAN_MARINE:
+        {
+            const GameInfo& game_info = Observation()->GetGameInfo();
+            Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, game_info.enemy_start_locations.front());
+            break;
+        }
+
         default:
             break;
     }
@@ -89,15 +104,19 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
         {
             unit_to_build = unit;
         }
+    }
+
+    if (unit_to_build)
+    {
         float rx = GetRandomScalar();
         float ry = GetRandomScalar();
-
         Actions()->UnitCommand(unit_to_build,
                                ability_type_for_structure,
                                Point2D(unit_to_build->pos.x + rx * 15.0f,
                                        unit_to_build->pos.y + ry * 15.0f));
         return true;
     }
+    return false;
 }
 
 
@@ -113,6 +132,27 @@ bool BasicSc2Bot::TryBuildSupplyDepot()
 
     // Try and build a depot. Find a random SCV and give it the order.
     return TryBuildStructure(ABILITY_ID::BUILD_SUPPLYDEPOT);
+}
+
+
+bool BasicSc2Bot::TryBuildBarracks()
+{
+	const ObservationInterface* observation = Observation();
+    if (countUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 1)
+    {
+        return false;
+    }
+    if (countUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 0)
+    {
+        return false;
+    }
+    return TryBuildStructure(ABILITY_ID::BUILD_BARRACKS);
+}
+
+
+size_t BasicSc2Bot::countUnitType(UNIT_TYPEID unit_type)
+{
+    return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
 
