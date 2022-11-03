@@ -19,13 +19,14 @@ public:
 	virtual void OnUnitIdle(const Unit* unit);
 	virtual void OnGameEnd();
 
-	bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
-	bool TryBuildSupplyDepot();
-	bool TryBuildBarracks();
+	bool TryMorphStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_LARVA);
+	bool TryMorphOverlord();
 	size_t countUnitType(UNIT_TYPEID unit_type);
 	void scout(const Unit* unit);
 
 	const Unit* FindNearestMineralPatch(const Point2D& start);
+
+
 
 private:
 };

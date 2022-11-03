@@ -11,6 +11,6 @@
 // played against other bots
 // Testing
 int main(int argc, char* argv[]) {
-	RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Terran);
+	RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Zerg);
 	return 0;
 }
