@@ -72,7 +72,8 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
         case UNIT_TYPEID::TERRAN_MARINE:
         {
             const GameInfo& game_info = Observation()->GetGameInfo();
-            Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, game_info.enemy_start_locations.front());
+            auto enemyStartLocations = game_info.enemy_start_locations;
+            Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
             break;
         }
 
