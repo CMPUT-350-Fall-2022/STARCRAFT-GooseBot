@@ -32,7 +32,7 @@ set(BUILD_API_TESTS OFF CACHE INTERNAL "" FORCE)
 
 add_subdirectory("cpp-sc2")
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT BasicSc2Bot)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT GooseBot)
 set_target_properties(sc2api PROPERTIES FOLDER sc2api)
 set_target_properties(sc2lib PROPERTIES FOLDER sc2api)
 set_target_properties(sc2protocol PROPERTIES FOLDER sc2api)
