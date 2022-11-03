@@ -23,6 +23,7 @@ public:
 	bool TryBuildSupplyDepot();
 	bool TryBuildBarracks();
 	size_t countUnitType(UNIT_TYPEID unit_type);
+	void scout(const Unit* unit);
 
 	const Unit* FindNearestMineralPatch(const Point2D& start);
 

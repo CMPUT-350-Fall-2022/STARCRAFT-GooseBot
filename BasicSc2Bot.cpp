@@ -71,9 +71,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
         case UNIT_TYPEID::TERRAN_MARINE:
         {
-            const GameInfo& game_info = Observation()->GetGameInfo();
-            auto enemyStartLocations = game_info.enemy_start_locations;
-            Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
+            scout(unit);
             break;
         }
 
@@ -154,6 +152,15 @@ bool BasicSc2Bot::TryBuildBarracks()
 size_t BasicSc2Bot::countUnitType(UNIT_TYPEID unit_type)
 {
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
+}
+
+
+// Very simple for now.
+void BasicSc2Bot::scout(const Unit* unit)
+{
+    const GameInfo& game_info = Observation()->GetGameInfo();
+    auto enemyStartLocations = game_info.enemy_start_locations;
+    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
 
