@@ -3,6 +3,36 @@ using namespace sc2;
 
 void BasicSc2Bot::OnGameStart() { return; }
 
+void BasicSc2Bot::OnGameEnd()
+{
+    const ObservationInterface* observation = Observation();
+    GameInfo gameInfo = observation->GetGameInfo();
+    auto players = std::map<uint32_t, PlayerInfo*>();
+    for (auto &playerInfo : gameInfo.player_info)
+    {
+
+        players[playerInfo.player_id] = &playerInfo;
+    }
+    
+    auto playerTypes = std::map<PlayerType, std::string>();
+    playerTypes[Participant] = "Goose";
+    playerTypes[Computer] = "Prey";
+    playerTypes[Observer] = "Observer";
+
+    auto gameResults = std::map<GameResult, std::string>();
+    gameResults[Win] = " Wins";
+    gameResults[Loss] = " Loses";
+    gameResults[Tie] = " Tied";
+    gameResults[Undecided] = " Undecided";
+
+    for (auto &playerResult : observation->GetResults())
+    {
+        std::cout << playerTypes[((*(players[playerResult.player_id])).player_type)] 
+                  << gameResults[playerResult.result]
+                  << std::endl;
+    }
+}
+
 void BasicSc2Bot::OnStep() { 
 	TryMorphOverlord();
 }
@@ -30,10 +60,26 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit) {
 			Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
 			break;
 		}
+
+        case UNIT_TYPEID::ZERG_OVERLORD:
+        {
+            scout(unit);
+            break;
+        }
+        
 		default: {
 			break;
 		}
 	}
+}
+
+
+// Very simple for now.
+void BasicSc2Bot::scout(const Unit* unit)
+{
+    const GameInfo& game_info = Observation()->GetGameInfo();
+    auto enemyStartLocations = game_info.enemy_start_locations;
+    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
 
@@ -57,10 +103,17 @@ bool BasicSc2Bot::TryMorphStructure(ABILITY_ID ability_type_for_structure, UNIT_
 	float rx = GetRandomScalar();
 	float ry = GetRandomScalar();
 
-	//Actions()->UnitCommand(unit_to_build, ability_type_for_structure, Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f));
-	//Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-
-	return true;
+	if (unit_to_build)
+    {
+        float rx = GetRandomScalar();
+        float ry = GetRandomScalar();
+        Actions()->UnitCommand(unit_to_build,
+                               ability_type_for_structure,
+                               Point2D(unit_to_build->pos.x + rx * 15.0f,
+                                       unit_to_build->pos.y + ry * 15.0f));
+        return true;
+    }
+    return false;
 }
 
 bool BasicSc2Bot::TryMorphOverlord() {
@@ -90,4 +143,9 @@ const Unit* BasicSc2Bot::FindNearestMineralPatch(const Point2D& start) {
 		
 	}
 	return target;
+}
+
+size_t BasicSc2Bot::countUnitType(UNIT_TYPEID unit_type)
+{
+    return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
