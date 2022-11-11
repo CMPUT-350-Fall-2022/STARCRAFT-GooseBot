@@ -23,8 +23,8 @@ class GooseBot : public sc2::Agent {
         virtual void OnUnitIdle(const sc2::Unit* unit) final;
         virtual void OnGameEnd();
 
-        bool TryMorphStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_LARVA);
-	    bool TryMorphOverlord();
+        bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_LARVA);
+	    bool TryMorphExtractor();
 	    size_t countUnitType(UNIT_TYPEID unit_type);
 	    void scout(const Unit* unit);
 
