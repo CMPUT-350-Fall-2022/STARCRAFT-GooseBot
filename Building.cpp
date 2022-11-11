@@ -24,7 +24,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	// Check to see if unit can build there
 	if (Query()->Placement(ability_type_for_structure, target->pos)) {
 		Actions()->UnitCommand(unit, ability_type_for_structure, target);
-		std::cout << "hello" << std::endl;
+		
 		return true;
 	}
 	return false;
