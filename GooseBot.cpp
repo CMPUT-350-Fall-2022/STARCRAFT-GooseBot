@@ -60,6 +60,19 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
 		case UNIT_TYPEID::ZERG_DRONE:
         {
+
+            /*const Unit* vespene_target = FindNearestZergExtractor(unit->pos);
+            
+            if (!vespene_target)
+            {
+                break;
+            }
+            
+            Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target,true);
+           
+            std::cout << "we made it here but... what now.."<< vespene_target << std::endl;
+            break;*/
+         
 			const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
 			if (!mineral_target)
             {
@@ -89,7 +102,26 @@ void GooseBot::scout(const Unit* unit)
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
+const Unit* GooseBot::FindNearestZergExtractor(const Point2D& start) {
+    Units units = Observation()->GetUnits(Unit::Alliance::Self);
+    float distance = std::numeric_limits<float>::max();
+    const Unit* target = nullptr;
 
+    for (const auto& u : units)
+    {
+
+        if (u->unit_type == UNIT_TYPEID::ZERG_EXTRACTOR)
+        {
+            float d = DistanceSquared2D(u->pos, start);
+            if (d < distance)
+            {
+                distance = d;
+                target = u;
+            }
+        }
+    }
+    return target;
+}
 
 
 
