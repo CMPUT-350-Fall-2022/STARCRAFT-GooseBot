@@ -20,7 +20,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 
 	// If no worker is already building one, get a random worker to build one
 	const Unit* unit = GetRandomEntry(workers);
-	std::cout << "wtf" << std::endl;
+	
 	// Check to see if unit can build there
 	if (Query()->Placement(ability_type_for_structure, target->pos)) {
 		Actions()->UnitCommand(unit, ability_type_for_structure, target);
