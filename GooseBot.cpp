@@ -38,7 +38,7 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() { 
-	TryMorphOverlord();
+	TryMorphExtractor();
 }
 
 
@@ -90,46 +90,7 @@ void GooseBot::scout(const Unit* unit)
 }
 
 
-bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type) {
-	const ObservationInterface* observation = Observation();
 
-	const Unit* unit_to_build = nullptr;
-	Units units = observation->GetUnits(Unit::Alliance::Self);
-	for (const auto& unit : units) {
-		for (const auto& order : unit->orders) {
-			if (order.ability_id == ability_type_for_structure) {
-				return false;
-			}
-		}
-
-		if (unit->unit_type == unit_type) {
-			unit_to_build = unit;
-		}
-	}
-
-	if (unit_to_build)
-    {
-        float rx = GetRandomScalar();
-        float ry = GetRandomScalar();
-        Actions()->UnitCommand(unit_to_build,
-                               ability_type_for_structure,
-                               Point2D(unit_to_build->pos.x + rx * 15.0f,
-                                       unit_to_build->pos.y + ry * 15.0f));
-        return true;
-    }
-    return false;
-}
-
-
-bool GooseBot::TryMorphOverlord() {
-	const ObservationInterface* observation = Observation();
-
-	if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
-		return false;
-	}
-
-	return TryMorphStructure(ABILITY_ID::TRAIN_OVERLORD);
-}
 
 
 const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
