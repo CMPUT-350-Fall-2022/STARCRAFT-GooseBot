@@ -35,6 +35,9 @@ bool GooseBot::TryMorphExtractor() {
 	
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+	if (bases.empty()) {
+		return false;
+	}
 	Point2D base_location = bases.back()->pos;
 	//only search within this radius
 	float minimum_distance = 30.0f;
