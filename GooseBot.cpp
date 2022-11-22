@@ -38,7 +38,13 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() { 
-	TryMorphExtractor();
+    if (TryMorphExtractor()) {
+        return;
+    }
+    if (TryHarvestVespene()) {
+        return;
+    }
+    
 }
 
 
@@ -61,24 +67,13 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 		case UNIT_TYPEID::ZERG_DRONE:
         {
 
-            const Unit* vespene_target = FindNearestZergExtractor(unit->pos);
-            
-            if (!vespene_target)
-            {
-                break;
-            }
-            
-            Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
-            
-            break;
-         
-	/*		const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
+			const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
 			if (!mineral_target)
             {
 				break;
 			}
 			Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
-			break;*/
+			break;
 		}
 
         case UNIT_TYPEID::ZERG_OVERLORD:
@@ -147,4 +142,33 @@ const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
 size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
 {
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
+}
+
+bool GooseBot::TryHarvestVespene() {
+    Units workers = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
+    
+    if (workers.empty()) {
+        return false;
+    }
+
+
+    const Unit* unit = GetRandomEntry(workers);
+    const Unit* vespene_target = FindNearestZergExtractor(unit->pos);
+
+    if (!vespene_target)
+    {
+        return false;
+    }
+    if (vespene_target->build_progress != 1) {
+        return false;
+    }
+
+    if (vespene_target->assigned_harvesters>=vespene_target->ideal_harvesters) {//change this to not be hardcoded
+        return false;
+    }
+    
+    Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
+    return true;
+    
+    
 }

@@ -30,6 +30,8 @@ class GooseBot : public sc2::Agent {
 
 	    const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestZergExtractor(const Point2D& start);
+
+        bool GooseBot::TryHarvestVespene();
     private:
 
 };
