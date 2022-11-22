@@ -75,7 +75,7 @@ bool GooseBot::TryBuildSpawningPool() {
 	size_t spawn_pools_num = spawn_pools.size();
 
 	float minimum_distance = 30.0f;
-	Tag closest_pos = 0;
+	Point2D closest_pos = base_location;
 	for (const auto& geyser : geysers) {
 		Point2D new_pos = geyser->pos;
 		new_pos.x -= 10;
@@ -84,15 +84,32 @@ bool GooseBot::TryBuildSpawningPool() {
 		if (current_distance < minimum_distance) {
 			if (Query()->Placement(ABILITY_ID::BUILD_SPAWNINGPOOL, new_pos)) {
 				minimum_distance = current_distance;
-				closest_pos = geyser->tag;
+				closest_pos = new_pos;
 			}
 		}
 	}
 
-	if (closest_pos == 0) {
+	if (closest_pos == base_location) {
 
 		return false;
 	}
 
-	return TryMorphStructure(ABILITY_ID::BUILD_SPAWNINGPOOL, closest_pos);
+	const QueryInterface* query = Query();
+
+	//Get a list of all workers belonging to the bot
+	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
+
+	//if we have no workers, we cannot build so we return false
+	if (workers.empty()) {
+		return false;
+	}
+
+	const Unit *worker = observation->GetUnit(workers.back()->tag);
+	const AbilityID abil = ABILITY_ID::BUILD_SPAWNINGPOOL;
+	const Point2D pos = closest_pos;
+	if (query->Placement(abil, pos)) {
+
+	}
+
+	return TryMorphStructure(ABILITY_ID::BUILD_SPAWNINGPOOL);
 }
