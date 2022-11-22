@@ -57,3 +57,7 @@ bool GooseBot::TryMorphExtractor() {
 
 	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser);
 }
+bool GooseBot::TryMorphBase() {
+
+
+}
