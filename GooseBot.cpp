@@ -2,7 +2,11 @@
 
 using namespace sc2;
 
-void GooseBot::OnGameStart() { return; }
+void GooseBot::OnGameStart() { 
+    const ObservationInterface* observation = Observation();
+
+    return; 
+}
 
 
 void GooseBot::OnGameEnd()
@@ -38,7 +42,12 @@ void GooseBot::OnGameEnd()
 
 void GooseBot::OnStep() { 
 
-    if (TryBuildStructure(ABILITY_ID::BUILD_SPAWNINGPOOL, UNIT_TYPEID::ZERG_SPAWNINGPOOL)) {
+    if (TryBuildStructure(abilities[phase], targetStruct[phase], builders[phase])) {
+        VerifyPhase();
+        return;
+    }
+    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]), builders[phase])){
+        VerifyPhase();
         return;
     }
     if (TryBirthQueen()){
@@ -85,9 +94,8 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
                 }
 			}
             
-            //spawns overlord to increase supply cap when we have only one available opening, 
-            //if we have less than 4 overlords FOR NOW
-			if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < 4){
+            //spawns overlord to increase supply cap when we have only one available opening
+			if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase]){
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
             }
             
@@ -113,7 +121,12 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
         case UNIT_TYPEID::ZERG_QUEEN:
         {
-            Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, FindNearest(UNIT_TYPEID::ZERG_HATCHERY, unit->pos));
+            const Unit * hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
+            //iterator pointing to buff if found, end if not found
+            auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
+            if (hasInjection == hatchery->buffs.end()){     //if no injection
+                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+            }
             break;
         }
         
@@ -131,7 +144,7 @@ void GooseBot::scout(const Unit* unit)
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
-const Unit* GooseBot::FindNearest(UNIT_TYPEID target_unit, const Point2D& start) {
+const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start) {
     Units units = Observation()->GetUnits(Unit::Alliance::Self);
     float distance = std::numeric_limits<float>::max();
     const Unit* target = nullptr;
@@ -179,6 +192,13 @@ size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
+//returns position tag of random unit of given type
+Tag GooseBot::FindUnitTag(UNIT_TYPEID unit_type){
+    auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+    const Unit * unit = GetRandomEntry(all_of_type);
+    return unit->tag;
+}
+
 bool GooseBot::TryHarvestVespene() {
     Units workers = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
     
@@ -188,7 +208,7 @@ bool GooseBot::TryHarvestVespene() {
 
 
     const Unit* unit = GetRandomEntry(workers);
-    const Unit* vespene_target = FindNearest(UNIT_TYPEID::ZERG_EXTRACTOR, unit->pos);
+    const Unit* vespene_target = FindNearestAllied(UNIT_TYPEID::ZERG_EXTRACTOR, unit->pos);
 
     if (!vespene_target)
     {
@@ -211,44 +231,55 @@ bool GooseBot::TryHarvestVespene() {
 bool GooseBot::TryBirthQueen(){
     const ObservationInterface* observation = Observation();
     Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) == 0 || countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queensCap){
+    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]){
+        for (const auto& order : bases[0]->orders) {
+            if (order.ability_id == ABILITY_ID::TRAIN_QUEEN) {
+                return false;
+            }
+        }
         Actions()->UnitCommand(bases[0], ABILITY_ID::TRAIN_QUEEN);
         return true;
     }else{
         return false;
     }
 }
+
+bool GooseBot::CanAfford(UNIT_TYPEID unit){
+    const ObservationInterface* observation = Observation();
+    int mineral_supply = observation->GetMinerals();
+    int gas_supply = observation->GetVespene();
+    auto const unit_data = observation->GetUnitTypeData();
+    for (auto data : unit_data){
+        if (data.unit_type_id == unit){ 
+            if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    }
+    return false;
+
+}
+
+void GooseBot::VerifyPhase(){
+    const ObservationInterface* observation = Observation();
+    auto units = observation->GetUnits(Unit::Alliance::Self);
+    size_t i = 0;
+    for (auto unit : units){
+        while (1){
+            if (unit->unit_type == targetStruct[i]){
+                ++i;
+            }
+            else{
+                break;
+            }
+        }
+    }
+    phase = i;
+}
 // EFFECT_INJECTLARVA target hatchery/lair
 // MORPH_LAIR no target
 
 // MORPH_OVERLORDTRANSPORT no target
-/*
-              RALLY_HATCHERY_UNITS = 211,   // Target: Unit, Point.
-  539         RALLY_HATCHERY_WORKERS = 212,   // Target: Unit, Point.
-  540         RALLY_MORPHING_UNIT = 199,   // Target: Unit, Point.
-  541         RALLY_NEXUS = 207,   // Target: Unit, Point.
-  542         RALLY_UNITS = 3673,  // Target: Unit, Point.
-  543         RALLY_WORKERS = 3690,  // Target: Unit, Point.
-  
-  625         RESEARCH_ZERGFLYERARMOR = 3702,  // Target: None.
-  626         RESEARCH_ZERGFLYERARMORLEVEL1 = 1315,  // Target: None.
-  627         RESEARCH_ZERGFLYERARMORLEVEL2 = 1316,  // Target: None.
-  628         RESEARCH_ZERGFLYERARMORLEVEL3 = 1317,  // Target: None.
-  629         RESEARCH_ZERGFLYERATTACK = 3703,  // Target: None.
-  630         RESEARCH_ZERGFLYERATTACKLEVEL1 = 1312,  // Target: None.
-  631         RESEARCH_ZERGFLYERATTACKLEVEL2 = 1313,  // Target: None.
-  632         RESEARCH_ZERGFLYERATTACKLEVEL3 = 1314,  // Target: None.
-  633         RESEARCH_ZERGGROUNDARMOR = 3704,  // Target: None.
-  634         RESEARCH_ZERGGROUNDARMORLEVEL1 = 1189,  // Target: None.
-  635         RESEARCH_ZERGGROUNDARMORLEVEL2 = 1190,  // Target: None.
-  636         RESEARCH_ZERGGROUNDARMORLEVEL3 = 1191,  // Target: None.
-  637         RESEARCH_ZERGLINGADRENALGLANDS = 1252,  // Target: None.
-  638         RESEARCH_ZERGLINGMETABOLICBOOST = 1253,  // Target: None.
-  639         RESEARCH_ZERGMELEEWEAPONS = 3705,  // Target: None.
-  640         RESEARCH_ZERGMELEEWEAPONSLEVEL1 = 1186,  // Target: None.
-  641         RESEARCH_ZERGMELEEWEAPONSLEVEL2 = 1187,  // Target: None.
-  642         RESEARCH_ZERGMELEEWEAPONSLEVEL3 = 1188,  // Target: None.
-  643         RESEARCH_ZERGMISSILEWEAPONS = 3706,  // Target: None.
-  644         RESEARCH_ZERGMISSILEWEAPONSLEVEL1 = 1192,  // Target: None.
-  645         RESEARCH_ZERGMISSILEWEAPONSLEVEL2 = 1193,  // Target: None.
-  646         RESEARCH_ZERGMISSILEWEAPONSLEVEL3 = 1194,  // Target: None.*/
+// BUFF_ID QUEENSPAWNLARVATIMER
