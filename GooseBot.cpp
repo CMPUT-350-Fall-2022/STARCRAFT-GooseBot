@@ -2,7 +2,6 @@
 
 using namespace sc2;
 
-
 void GooseBot::OnGameStart() { return; }
 
 
@@ -74,6 +73,14 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             scout(unit);
             break;
         }
+
+        case UNIT_TYPEID::ZERG_HATCHERY:
+        {
+            if (numQueens < 2*numHatcheries){
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_QUEEN);
+                ++numQueens;
+            }
+        }
         
 		default:
 			break;
@@ -88,9 +95,6 @@ void GooseBot::scout(const Unit* unit)
     auto enemyStartLocations = game_info.enemy_start_locations;
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
-
-
-
 
 
 const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {

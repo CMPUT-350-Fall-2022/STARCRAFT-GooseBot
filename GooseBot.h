@@ -30,6 +30,8 @@ class GooseBot : public sc2::Agent {
 
 	    const Unit* FindNearestMineralPatch(const Point2D& start);
     private:
+        int numHatcheries = 1;
+        int numQueens = 0;
 
 };
 #endif
