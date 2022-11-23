@@ -58,7 +58,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 			while (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
             {
                 //if our total number of workers is less than 30
-                if ((observation->GetFoodWorkers() <= 22)) {        //TODO: change this limit to rely on our number of hatcheries
+                if ((observation->GetFoodWorkers() <= 22 - 2)) {        //TODO: change this limit to rely on our number of hatcheries
                     //build a worker
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                     break;
