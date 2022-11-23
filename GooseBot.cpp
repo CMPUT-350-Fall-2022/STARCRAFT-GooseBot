@@ -46,7 +46,7 @@ void GooseBot::OnStep() {
         VerifyPhase();
         return;
     }
-    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]), builders[phase])){
+    if (TryMorphLair()){
         VerifyPhase();
         return;
     }
@@ -59,6 +59,7 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
+    std::cout << "can't perform any action" << std::endl;
 
 
     
@@ -126,6 +127,8 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
             if (hasInjection == hatchery->buffs.end()){     //if no injection
                 Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+            }else{
+                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, tumorCap[phase]);
             }
             break;
         }
@@ -192,11 +195,10 @@ size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
-//returns position tag of random unit of given type
-Tag GooseBot::FindUnitTag(UNIT_TYPEID unit_type){
+//returns random unit of given type
+const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
     auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    const Unit * unit = GetRandomEntry(all_of_type);
-    return unit->tag;
+    return GetRandomEntry(all_of_type);
 }
 
 bool GooseBot::TryHarvestVespene() {

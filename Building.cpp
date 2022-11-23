@@ -125,7 +125,7 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 		return false;
 	}
     // If a unit already is building a supply structure of this type, do nothing.
-    // Also get an scv to build the structure.
+    // Also get a unit to build the structure.
     const Unit* unit_to_build = nullptr;
     Units units = observation->GetUnits(Unit::Alliance::Self);
     for (const auto& unit : units) {
@@ -145,4 +145,24 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
           Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f));
     
     return true;
+}
+
+
+bool GooseBot::TryMorphLair() {
+	const ObservationInterface* observation = Observation();
+	
+	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+	if (bases.empty() || !CanAfford(UNIT_TYPEID::ZERG_LAIR)) {
+		return false;
+	}
+
+	const Unit* base = bases.back();
+	//bool alreadyAttempting = (std::find(base->orders.begin(), base->orders.end(), ABILITY_ID::MORPH_LAIR) != base->orders.end());
+	//if (CanAfford(UNIT_TYPEID::ZERG_LAIR) && !alreadyAttempting){
+		Actions()->UnitCommand(base, ABILITY_ID::MORPH_LAIR);
+		return true;
+	//}else{
+	//	return false;
+	//}
+		
 }
