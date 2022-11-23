@@ -25,6 +25,7 @@ class GooseBot : public sc2::Agent {
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
+        bool TryBuildSpawningPool();
 	    size_t countUnitType(UNIT_TYPEID unit_type);
 	    void scout(const Unit* unit);
 

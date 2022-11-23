@@ -44,24 +44,44 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
+    if (TryBuildSpawningPool()) {
+        return;
+    }
     
 }
 
 
 // In your bot class.
 void GooseBot::OnUnitIdle(const Unit* unit) {
+    //get the current game state observation
     const ObservationInterface* observation = Observation();
 
+    //for our unit pointer, we do a switch-case dependent on it's type
 	switch (unit->unit_type.ToType())
     {
+        //if the unit is a larva unit
 		case UNIT_TYPEID::ZERG_LARVA:
         {
+            //while our supply limit is less than or equal to our supply limit cap - 1
 			while (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
             {
-				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-				break;
+                //if our total number of workers is less than 30
+                if ((observation->GetFoodWorkers() <= 22 - 2)) {        //TODO: change this limit to rely on our number of hatcheries
+                    //build a worker
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
+                    break;
+                }
+
+                //if our army count is less than or equal to 10
+                if (observation->GetFoodArmy() <= 10) {
+                    //try to train a zergling (this can't be done unless there is an existing spawning pool
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                    break;
+                }
 			}
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+            
 		}
 
 		case UNIT_TYPEID::ZERG_DRONE:
