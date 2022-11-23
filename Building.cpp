@@ -8,6 +8,9 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 	
 	const Unit* target = observation->GetUnit(location_tag);
+	if (target->unit_type == UNIT_TYPEID::ZERG_DRONE){
+		return false;
+	}
 
 	//if we have no workers, we cannot build so we return false
 	if (workers.empty()) {
@@ -29,7 +32,6 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	// Check to see if unit can build there
 	if (Query()->Placement(ability_type_for_structure, target->pos)) {
 		Actions()->UnitCommand(unit, ability_type_for_structure, target);
-		
 		return true;
 	}
 	return false;
@@ -93,7 +95,6 @@ bool GooseBot::TryBuildSpawningPool() {
 	}
 
 	if (closest_pos == base_location) {
-
 		return false;
 	}
 
@@ -110,10 +111,38 @@ bool GooseBot::TryBuildSpawningPool() {
 	const Point2D pos = closest_pos;
 	if (Query()->Placement(abil, pos,unit)) { 
 		Actions()->UnitCommand(unit, abil, pos);
-		
 		return true;
-
 	}
 
 	return false;
+}
+
+//from tutorial, adapted
+bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type, size_t struct_cap) {
+	const ObservationInterface* observation = Observation();
+	Units structs = observation->GetUnits(Unit::Alliance::Self, IsUnit(struct_type));
+	if (structs.size() >= struct_cap){
+		return false;
+	}
+    // If a unit already is building a supply structure of this type, do nothing.
+    // Also get an scv to build the structure.
+    const Unit* unit_to_build = nullptr;
+    Units units = observation->GetUnits(Unit::Alliance::Self);
+    for (const auto& unit : units) {
+   		for (const auto& order : unit->orders) {
+            if (order.ability_id == ability_type_for_structure) {
+                return false;
+            }
+        }
+        if (unit->unit_type == unit_type) {
+            unit_to_build = unit;
+        }
+    }
+   
+    float rx = GetRandomScalar();
+    float ry = GetRandomScalar();
+    Actions()->UnitCommand(unit_to_build, ability_type_for_structure,\
+          Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f));
+    
+    return true;
 }
