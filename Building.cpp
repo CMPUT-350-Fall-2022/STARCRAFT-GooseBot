@@ -1,10 +1,15 @@
 #include "GooseBot.h"
 
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID unit_type) {
-	const ObservationInterface* observation = Observation();
+	//get an observation of the current game state
+	const ObservationInterface* observation = Observation(); 
+	
+	//Get a list of all workers belonging to the bot
 	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+	
 	const Unit* target = observation->GetUnit(location_tag);
 
+	//if we have no workers, we cannot build so we return false
 	if (workers.empty()) {
 		return false;
 	}
@@ -59,4 +64,56 @@ bool GooseBot::TryMorphExtractor() {
 	}
 
 	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser);
+}
+
+bool GooseBot::TryBuildSpawningPool() {
+	const ObservationInterface* observation = Observation();
+
+	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+	Units spawn_pools = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL));
+	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+
+	Point2D base_location = bases.back()->pos;
+	size_t bases_num = bases.size();
+	size_t spawn_pools_num = spawn_pools.size();
+
+	float minimum_distance = 30.0f;
+	Point2D closest_pos = base_location;
+	for (const auto& geyser : geysers) {
+		Point2D new_pos = geyser->pos;
+		new_pos.x -= 5;
+		
+		float current_distance = Distance2D(base_location, new_pos);
+		if (current_distance < minimum_distance) {
+			if (Query()->Placement(ABILITY_ID::BUILD_SPAWNINGPOOL, new_pos)) {
+				minimum_distance = current_distance;
+				closest_pos = new_pos;
+			}
+		}
+	}
+
+	if (closest_pos == base_location) {
+
+		return false;
+	}
+
+	//Get a list of all workers belonging to the bot
+	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
+
+	//if we have no workers, we cannot build so we return false
+	if (workers.empty()) {
+		return false;
+	}
+
+	const Unit* unit = GetRandomEntry(workers);
+	const AbilityID abil = ABILITY_ID::BUILD_SPAWNINGPOOL;
+	const Point2D pos = closest_pos;
+	if (Query()->Placement(abil, pos,unit)) { 
+		Actions()->UnitCommand(unit, abil, pos);
+		
+		return true;
+
+	}
+
+	return false;
 }

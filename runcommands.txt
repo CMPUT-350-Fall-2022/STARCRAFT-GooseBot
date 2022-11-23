@@ -1,0 +1,1 @@
+GooseBot.exe -c -a terran -d Hard -m CactusValleyLE.SC2Map
