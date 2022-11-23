@@ -78,7 +78,7 @@ bool GooseBot::TryBuildSpawningPool() {
 	Point2D closest_pos = base_location;
 	for (const auto& geyser : geysers) {
 		Point2D new_pos = geyser->pos;
-		new_pos.x -= 10;
+		new_pos.x -= 5;
 		
 		float current_distance = Distance2D(base_location, new_pos);
 		if (current_distance < minimum_distance) {
