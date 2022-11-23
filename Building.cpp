@@ -86,30 +86,35 @@ bool GooseBot::TryBuildSpawningPool() {
 				minimum_distance = current_distance;
 				closest_pos = new_pos;
 			}
+			std::cout << "Placement failed" << std::endl;
 		}
 	}
 
 	if (closest_pos == base_location) {
+		std::cout << "closest_pos is base_location" << std::endl;
 
 		return false;
 	}
-
-	const QueryInterface* query = Query();
 
 	//Get a list of all workers belonging to the bot
 	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
 
 	//if we have no workers, we cannot build so we return false
 	if (workers.empty()) {
+		std::cout << "no workers" << std::endl;
 		return false;
 	}
 
-	const Unit *worker = observation->GetUnit(workers.back()->tag);
+	const Unit* unit = GetRandomEntry(workers);
 	const AbilityID abil = ABILITY_ID::BUILD_SPAWNINGPOOL;
 	const Point2D pos = closest_pos;
-	if (query->Placement(abil, pos)) {
+	if (Query()->Placement(abil, pos,unit)) { 
+		Actions()->UnitCommand(unit, abil, pos);
+		
+		return true;
 
 	}
 
-	return TryMorphStructure(ABILITY_ID::BUILD_SPAWNINGPOOL);
+	std::cout << "Placement failed" << std::endl;
+	return false;
 }

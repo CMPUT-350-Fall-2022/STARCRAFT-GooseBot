@@ -39,6 +39,7 @@ void GooseBot::OnGameEnd()
 
 void GooseBot::OnStep() { 
 	TryMorphExtractor();
+    TryBuildSpawningPool();
 }
 
 
