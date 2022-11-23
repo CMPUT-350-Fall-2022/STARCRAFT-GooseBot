@@ -117,3 +117,9 @@ bool GooseBot::TryBuildSpawningPool() {
 
 	return false;
 }
+bool GooseBot::TryBuildRoachWarren() {
+	const ObservationInterface* observation = Observation();
+
+	
+
+}
