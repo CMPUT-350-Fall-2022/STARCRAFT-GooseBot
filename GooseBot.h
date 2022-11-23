@@ -26,16 +26,17 @@ class GooseBot : public sc2::Agent {
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
         bool TryBuildSpawningPool();
+        bool GooseBot::TryBirthQueen();
+        bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
 	    size_t countUnitType(UNIT_TYPEID unit_type);
 	    void scout(const Unit* unit);
 
 	    const Unit* FindNearestMineralPatch(const Point2D& start);
-        const Unit* FindNearestZergExtractor(const Point2D& start);
+        const Unit* FindNearest(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
     private:
-        int numHatcheries = 1;
-        int numQueens = 0;
+        size_t queensCap = 2;
 
 };
 #endif
