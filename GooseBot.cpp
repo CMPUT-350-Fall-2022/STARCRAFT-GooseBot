@@ -38,8 +38,16 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() { 
-	TryMorphExtractor();
-    TryBuildSpawningPool();
+    if (TryMorphExtractor()) {
+        return;
+    }
+    if (TryHarvestVespene()) {
+        return;
+    }
+    if (TryBuildSpawningPool()) {
+        return;
+    }
+    
 }
 
 
@@ -78,6 +86,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
 		case UNIT_TYPEID::ZERG_DRONE:
         {
+
 			const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
 			if (!mineral_target)
             {
@@ -107,7 +116,26 @@ void GooseBot::scout(const Unit* unit)
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
+const Unit* GooseBot::FindNearestZergExtractor(const Point2D& start) {
+    Units units = Observation()->GetUnits(Unit::Alliance::Self);
+    float distance = std::numeric_limits<float>::max();
+    const Unit* target = nullptr;
 
+    for (const auto& u : units)
+    {
+
+        if (u->unit_type == UNIT_TYPEID::ZERG_EXTRACTOR)
+        {
+            float d = DistanceSquared2D(u->pos, start);
+            if (d < distance)
+            {
+                distance = d;
+                target = u;
+            }
+        }
+    }
+    return target;
+}
 
 
 
@@ -134,4 +162,33 @@ const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
 size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
 {
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
+}
+
+bool GooseBot::TryHarvestVespene() {
+    Units workers = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
+    
+    if (workers.empty()) {
+        return false;
+    }
+
+
+    const Unit* unit = GetRandomEntry(workers);
+    const Unit* vespene_target = FindNearestZergExtractor(unit->pos);
+
+    if (!vespene_target)
+    {
+        return false;
+    }
+    if (vespene_target->build_progress != 1) {
+        return false;
+    }
+
+    if (vespene_target->assigned_harvesters>=vespene_target->ideal_harvesters) {//change this to not be hardcoded
+        return false;
+    }
+    
+    Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
+    return true;
+    
+    
 }
