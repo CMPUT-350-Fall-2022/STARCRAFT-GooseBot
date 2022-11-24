@@ -29,11 +29,15 @@ class GooseBot : public sc2::Agent {
         bool TryBuildSpawningPool();
         bool TryBirthQueen();
         bool TryMorphLair();
-        bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
+        bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
 	    bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
+        
         bool actionPending(ABILITY_ID action);
         size_t countUnitType(UNIT_TYPEID unit_type);
         const Unit* FindUnit(UNIT_TYPEID unit_type);
+        const Unit* GetMainBase();
+        const Unit* GetNewerBase();
+
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
@@ -50,20 +54,22 @@ class GooseBot : public sc2::Agent {
 
         bool GooseBot::TryHarvestVespene();
     private:
-        enum PHASE {SPAWN, ZERGLINGS, END};
+        enum PHASE {SPAWN, ZERGLINGS, ROACHES, END};
 
         using UnitList = std::array<UNIT_TYPEID, END>;
 
         std::unordered_set<ABILITY_ID> pendingOrders;
 
-        size_t phase = 0;
-        const std::array<size_t, 2> overlordCap = {2, 3};
-        const std::array<size_t, 2> queenCap = {1, 2};
-        const std::array<size_t, 2> tumorCap = {1, 2};
+        std::vector<UPGRADE_ID> upgraded;
 
-        const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_LAIR};
-        const UnitList builders = {UNIT_TYPEID::ZERG_DRONE, UNIT_TYPEID::ZERG_HATCHERY};
-        const std::array<ABILITY_ID, 2> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::MORPH_LAIR};
+        size_t phase = 0;
+        const std::array<size_t, END> overlordCap = {2, 3, 5};
+        const std::array<size_t, END> queenCap = {1, 2, 2};
+        const std::array<size_t, END> tumorCap = {1, 2, 3};
+
+        // 3rd set dummies for moment
+        const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BROODLORD};
+        const std::array<ABILITY_ID, END> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::BUILD_ROACHWARREN, ABILITY_ID::TEMPLEDOORDOWN};
 
 };
 #endif

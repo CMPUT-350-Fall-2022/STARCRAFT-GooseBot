@@ -51,7 +51,7 @@ void GooseBot::OnGameEnd()
 void GooseBot::OnStep() { 
     VerifyPhase();
     VerifyPending();
-    if (TryBuildStructure(abilities[phase], targetStruct[phase], builders[phase])) {
+    if (TryBuildStructure(abilities[phase], targetStruct[phase])) {
         std::cout << "Built structure for phase " << phase << std::endl;
         return;
     }
@@ -74,14 +74,9 @@ void GooseBot::OnStep() {
         std::cout << "Researched" << std::endl;
         return;
     }
-
-    if (TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_DRONE, 1)) {
+    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
         return;
     }
-    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST, UNIT_TYPEID::ZERG_DRONE, 1)) {
-        return;
-    }
-
     if (ArmyReady() && EnemyLocated()) {
         Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
     }   
@@ -285,10 +280,9 @@ bool GooseBot::TryBirthQueen(){
         || (actionPending(ABILITY_ID::TRAIN_QUEEN))  ){
         return false;
     }
-    const ObservationInterface* observation = Observation();
-    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]){
-        Actions()->UnitCommand(bases[0], ABILITY_ID::TRAIN_QUEEN);
+    const Unit * base = GetMainBase();
+    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]) && (base != nullptr)){
+        Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
         return true;
     }else{
         return false;
@@ -305,8 +299,8 @@ bool GooseBot::CanAfford(UNIT_TYPEID unit){
     for (auto data : unit_data){
         if (data.unit_type_id == unit){ 
             if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
-                if ( ((data.tech_requirement != 0) && (countUnitType(data.tech_requirement) > 0))
-                    || (data.tech_requirement == 0) ){
+                if ( ((data.tech_requirement != UNIT_TYPEID::INVALID) && (countUnitType(data.tech_requirement) > 0))
+                    || (data.tech_requirement == UNIT_TYPEID::INVALID) ){
                     return true;
                 }
             }else{
@@ -353,7 +347,8 @@ void GooseBot::VerifyPhase(){
 }
 
 bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade){
-    if (actionPending(ability)){
+    if (actionPending(ability)
+        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())){
         return false;
     }
     const Unit* researcher = FindUnit(researcher_type);
