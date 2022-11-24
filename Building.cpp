@@ -1,5 +1,12 @@
 #include "GooseBot.h"
-
+/// <summary>
+/// Checks if there structur can be morphed, if true morphs/builds structure
+/// Requires preexisting unit to morph from
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="location_tag"></param>
+/// <param name="unit_type"></param>
+/// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID worker_unit) {
 	const ObservationInterface* observation = Observation(); 
 	//Get a random worker
@@ -33,7 +40,10 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	return false;
 }
 
-// Try to morph a drone into an extractor on a nearby vespene geyser
+/// <summary>
+/// Checks if there is a Vespene Geyser nearby the hatchery, if true passes parameters to build extractor to TryMorphStructure()
+/// </summary>
+/// <returns>BOOL, true if extractor can be built, false otherwise</returns>
 bool GooseBot::TryMorphExtractor() {
 	const ObservationInterface* observation = Observation();
 	
@@ -47,7 +57,7 @@ bool GooseBot::TryMorphExtractor() {
 	}
 	Point2D base_location = bases.back()->pos;
 	//only search within this radius
-	float minimum_distance = 30.0f;
+	float minimum_distance = 15.0f;
 	Tag closestGeyser = 0;
 	for (const auto& geyser : geysers) {
 		float current_distance = Distance2D(base_location, geyser->pos);

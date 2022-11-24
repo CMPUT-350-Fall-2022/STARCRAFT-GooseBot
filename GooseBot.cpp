@@ -75,10 +75,16 @@ void GooseBot::OnStep() {
         return;
     }
 
-    if (ArmyReady() && EnemyLocated()) {
-        Attack();
+    if (TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_DRONE, 1)) {
+        return;
     }
-    
+    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST, UNIT_TYPEID::ZERG_DRONE, 1)) {
+        return;
+    }
+
+    if (ArmyReady() && EnemyLocated()) {
+        Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
+    }   
 }
 
 
