@@ -194,10 +194,15 @@ size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
 }
 
 //returns position tag of random unit of given type
-Tag GooseBot::FindUnitTag(UNIT_TYPEID unit_type){
+Tag GooseBot::FindUnitTag(UNIT_TYPEID unit_type)
+{
     auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    const Unit * unit = GetRandomEntry(all_of_type);
-    return unit->tag;
+    if (all_of_type.size() > 0)
+    {
+        const Unit * unit = GetRandomEntry(all_of_type);
+        return unit->tag;
+    }
+    return 0;   //TODO: May cause weird behavior when the result is passed to GetUnit(), check later.
 }
 
 bool GooseBot::TryHarvestVespene() {
@@ -229,20 +234,23 @@ bool GooseBot::TryHarvestVespene() {
     
 }
 
-bool GooseBot::TryBirthQueen(){
+bool GooseBot::TryBirthQueen()
+{
     const ObservationInterface* observation = Observation();
     Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]){
-        for (const auto& order : bases[0]->orders) {
-            if (order.ability_id == ABILITY_ID::TRAIN_QUEEN) {
-                return false;
+    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase])
+    {   if (bases.size() > 0)
+        {   for (const auto& order : bases[0]->orders)
+            {   if (order.ability_id == ABILITY_ID::TRAIN_QUEEN)
+                {
+                    return false;
+                }
             }
+            Actions()->UnitCommand(bases[0], ABILITY_ID::TRAIN_QUEEN);
+            return true;
         }
-        Actions()->UnitCommand(bases[0], ABILITY_ID::TRAIN_QUEEN);
-        return true;
-    }else{
-        return false;
     }
+    return false;
 }
 
 bool GooseBot::CanAfford(UNIT_TYPEID unit){
