@@ -15,22 +15,6 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 
 	//if we have no workers, we cannot build so we return false
-	if (workers.empty()) {
-		return false;
-	}
-
-    
-
-    if (location_tag == 0)
-    {
-        return false;
-    }
-    const Unit* target = observation->GetUnit(location_tag);
-    if (target->unit_type == UNIT_TYPEID::ZERG_DRONE){
-        return false;
-    }
-
-    //if we have no workers, we cannot build so we return false
     if (workers.empty()) {
         return false;
     }
@@ -59,7 +43,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 			return true;
 		}
 	}
-	else {
+	else if (location_point != Point2D(0,0)) {
 		// Check to see if unit can build there
 		if (Query()->Placement(ability_type_for_structure, location_point)) {
 			Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
