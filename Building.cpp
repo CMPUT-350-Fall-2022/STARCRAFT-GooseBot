@@ -1,5 +1,12 @@
 #include "GooseBot.h"
-
+/// <summary>
+/// Checks if there structur can be morphed, if true morphs/builds structure
+/// Requires preexisting unit to morph from
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="location_tag"></param>
+/// <param name="unit_type"></param>
+/// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID unit_type) {
     //get an observation of the current game state
     const ObservationInterface* observation = Observation(); 
@@ -41,7 +48,10 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
     }
     return false;
 }
-
+/// <summary>
+/// Checks if there is a Vespene Geyser nearby the hatchery, if true passes parameters to build extractor to TryMorphStructure()
+/// </summary>
+/// <returns>BOOL, true if extractor can be built, false otherwise</returns>
 bool GooseBot::TryMorphExtractor() {
     const ObservationInterface* observation = Observation();
     
@@ -52,7 +62,7 @@ bool GooseBot::TryMorphExtractor() {
     }
     Point2D base_location = bases.back()->pos;
     //only search within this radius
-    float minimum_distance = 30.0f;
+    float minimum_distance = 15.0f;
     Tag closestGeyser = 0;
     for (const auto& geyser : geysers) {
         float current_distance = Distance2D(base_location, geyser->pos);
@@ -65,8 +75,8 @@ bool GooseBot::TryMorphExtractor() {
     }
 
     // In the case where there are no more available geysers nearby
-    if (closestGeyser == 0) {
-
+    if (closestGeyser == 0)
+    {
         return false;
     }
 
@@ -76,13 +86,15 @@ bool GooseBot::TryMorphExtractor() {
 bool GooseBot::TryBuildSpawningPool() {
     const ObservationInterface* observation = Observation();
 
-    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    Units spawn_pools = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL));
-    Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
-
-    Point2D base_location = bases.back()->pos;
-    size_t bases_num = bases.size();
-    size_t spawn_pools_num = spawn_pools.size();
+	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+	Units spawn_pools = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL));
+	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+	if (bases.empty()) {
+		return false; //adding null check here
+	}
+	Point2D base_location = bases.back()->pos;
+	size_t bases_num = bases.size();
+	size_t spawn_pools_num = spawn_pools.size();
 
     float minimum_distance = 30.0f;
     Point2D closest_pos = base_location;
@@ -156,3 +168,5 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
     }
     return false;
 }
+	
+

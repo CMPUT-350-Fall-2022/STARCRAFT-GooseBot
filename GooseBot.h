@@ -34,6 +34,7 @@ class GooseBot : public sc2::Agent {
         bool Attack();
 
         size_t countUnitType(UNIT_TYPEID unit_type);
+ 
         Tag FindUnitTag(UNIT_TYPEID unit_type);
         bool CanAfford(UNIT_TYPEID unit);
         void scout(const Unit* unit);
