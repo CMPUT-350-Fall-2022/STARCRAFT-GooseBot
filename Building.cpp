@@ -1,16 +1,11 @@
 #include "GooseBot.h"
 
-bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID unit_type) {
+bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, const Point2D& location_point, UNIT_TYPEID unit_type) {
 	//get an observation of the current game state
 	const ObservationInterface* observation = Observation(); 
 	
 	//Get a list of all workers belonging to the bot
 	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-	
-	const Unit* target = observation->GetUnit(location_tag);
-	if (target->unit_type == UNIT_TYPEID::ZERG_DRONE){
-		return false;
-	}
 
 	//if we have no workers, we cannot build so we return false
 	if (workers.empty()) {
@@ -28,11 +23,26 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 
 	// If no worker is already building one, get a random worker to build one
 	const Unit* unit = GetRandomEntry(workers);
+
+	/* If given a location tag, use unit to morph. (This is used for extractors right now) If given a point, build at point location */
+	if (location_tag != NULL) {
+		const Unit* target = observation->GetUnit(location_tag);
+		if (target->unit_type == UNIT_TYPEID::ZERG_DRONE) {
+			return false;
+		}
+		// Check to see if unit can build there
+		if (Query()->Placement(ability_type_for_structure, target->pos)) {
+			Actions()->UnitCommand(unit, ability_type_for_structure, target);
+			return true;
+		}
+	}
+	else {
+		// Check to see if unit can build there
+		if (Query()->Placement(ability_type_for_structure, location_point)) {
+			Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
+			return true;
+		}
 	
-	// Check to see if unit can build there
-	if (Query()->Placement(ability_type_for_structure, target->pos)) {
-		Actions()->UnitCommand(unit, ability_type_for_structure, target);
-		return true;
 	}
 	return false;
 }

@@ -46,7 +46,7 @@ void GooseBot::OnStep() {
         VerifyPhase();
         return;
     }
-    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]), builders[phase])){
+    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]),Point2D(0,0), builders[phase])){
         VerifyPhase();
         return;
     }
