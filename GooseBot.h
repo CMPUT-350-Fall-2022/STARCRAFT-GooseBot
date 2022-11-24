@@ -21,6 +21,7 @@ class GooseBot : public sc2::Agent {
         virtual void OnGameStart();
         virtual void OnStep();
         virtual void OnUnitIdle(const sc2::Unit* unit) final;
+        virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
