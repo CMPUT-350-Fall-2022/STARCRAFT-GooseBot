@@ -78,7 +78,8 @@ void GooseBot::OnStep() {
     }
 
     if (ArmyReady() && EnemyLocated()) {
-        Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
+        Attack();      //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
+        return;
     }   
 }
 

@@ -20,7 +20,7 @@ class GooseBot : public sc2::Agent {
 
         virtual void OnGameStart();
         virtual void OnStep();
-        virtual void OnUnitIdle(const sc2::Unit* unit) final;
+        virtual void OnUnitIdle(const Unit* unit) final;
         virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
 
@@ -32,7 +32,7 @@ class GooseBot : public sc2::Agent {
 	    
         bool ArmyReady();
         bool EnemyLocated();
-        bool Attack();
+        void Attack();
 
         size_t countUnitType(UNIT_TYPEID unit_type);
  
