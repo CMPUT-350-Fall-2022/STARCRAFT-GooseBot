@@ -1,4 +1,20 @@
 #include "GooseBot.h"
+
+bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
+	//get an observation of the current game state
+	const ObservationInterface* observation = Observation(); 
+
+	// If no worker is already building one, get a random worker to build one
+	const Unit* unit = FindUnit(worker_unit);
+
+	// Check to see if unit can build there
+	if (Query()->Placement(ability_type_for_structure, location_point)) {
+		Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
+		return true;
+	}
+	
+}
+
 /// <summary>
 /// Checks if there structur can be morphed, if true morphs/builds structure
 /// Requires preexisting unit to morph from
