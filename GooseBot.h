@@ -28,6 +28,11 @@ class GooseBot : public sc2::Agent {
         bool TryBuildSpawningPool();
         bool TryBirthQueen();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
+	    
+        bool ArmyReady();
+        bool EnemyLocated();
+        bool Attack();
+
         size_t countUnitType(UNIT_TYPEID unit_type);
         Tag FindUnitTag(UNIT_TYPEID unit_type);
         bool CanAfford(UNIT_TYPEID unit);
