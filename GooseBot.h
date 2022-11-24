@@ -10,6 +10,7 @@
 #include "cpp-sc2/include/sc2api/sc2_interfaces.h"
 #include "sc2api/sc2_unit_filters.h"
 #include <array>
+#include <unordered_set>
 
 using namespace sc2;
 
@@ -23,17 +24,21 @@ class GooseBot : public sc2::Agent {
         virtual void OnUnitIdle(const sc2::Unit* unit) final;
         virtual void OnGameEnd();
 
-        bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
+        bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
         bool TryBuildSpawningPool();
         bool TryBirthQueen();
         bool TryMorphLair();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
-	    size_t countUnitType(UNIT_TYPEID unit_type);
+	    bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
+        bool actionPending(ABILITY_ID action);
+        size_t countUnitType(UNIT_TYPEID unit_type);
         const Unit* FindUnit(UNIT_TYPEID unit_type);
         bool CanAfford(UNIT_TYPEID unit);
+        bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
         void VerifyPhase();
+        void VerifyPending();
 
 	    const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
@@ -44,6 +49,8 @@ class GooseBot : public sc2::Agent {
 
         using UnitList = std::array<UNIT_TYPEID, END>;
 
+        std::unordered_set<ABILITY_ID> pendingOrders;
+
         size_t phase = 0;
         const std::array<size_t, 2> overlordCap = {2, 3};
         const std::array<size_t, 2> queenCap = {1, 2};
@@ -52,8 +59,6 @@ class GooseBot : public sc2::Agent {
         const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_LAIR};
         const UnitList builders = {UNIT_TYPEID::ZERG_DRONE, UNIT_TYPEID::ZERG_HATCHERY};
         const std::array<ABILITY_ID, 2> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::MORPH_LAIR};
-
-
 
 };
 #endif
