@@ -37,10 +37,15 @@ class GooseBot : public sc2::Agent {
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
+	    
+        bool ArmyReady();
+        bool EnemyLocated();
+        bool Attack();
+
         void VerifyPhase();
         void VerifyPending();
 
-	    const Unit* FindNearestMineralPatch(const Point2D& start);
+        const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
