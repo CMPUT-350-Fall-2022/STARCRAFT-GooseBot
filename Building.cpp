@@ -7,6 +7,11 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
     //Get a list of all workers belonging to the bot
     Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
     
+
+    if (location_tag == 0)
+    {
+        return false;
+    }
     const Unit* target = observation->GetUnit(location_tag);
     if (target->unit_type == UNIT_TYPEID::ZERG_DRONE){
         return false;
