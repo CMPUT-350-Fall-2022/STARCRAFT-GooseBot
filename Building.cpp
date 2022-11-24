@@ -160,10 +160,3 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 }
 	
 
-bool GooseBot::TryBuildRoachWarren() {
-	const ObservationInterface* observation = Observation();
-	
-	TryBuildStructure();
-	
-
-}

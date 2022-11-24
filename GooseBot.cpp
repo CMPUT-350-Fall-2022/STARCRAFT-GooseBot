@@ -59,9 +59,13 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
-
-
-    
+    if (TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_DRONE, 1)) {
+        return;
+    }
+    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST, UNIT_TYPEID::ZERG_DRONE, 1)) {
+        return;
+    }
+   
 }
 
 
