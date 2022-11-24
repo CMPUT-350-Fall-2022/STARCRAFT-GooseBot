@@ -13,8 +13,6 @@
 using namespace sc2;
 
 void GooseBot::OnGameStart() { 
-    const ObservationInterface* observation = Observation();
-
     return; 
 }
 
@@ -51,29 +49,32 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() { 
-
-    if (TryBuildStructure(abilities[phase], targetStruct[phase], builders[phase])) {
-        VerifyPhase();
+    VerifyPhase();
+    VerifyPending();
+    if (TryBuildStructure(abilities[phase], targetStruct[phase])) {
+        std::cout << "Built structure for phase " << phase << std::endl;
         return;
     }
-    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]),Point2D(0,0), builders[phase])){
-        VerifyPhase();
+    if (TryMorphLair()){
+        std::cout << "Morphed Lair" << std::endl;
         return;
     }
     if (TryBirthQueen()){
+        std::cout << "Birthed Queen" << std::endl;
         return;
     }
     if (TryMorphExtractor()) {
+        std::cout << "Morphed Extractor" << std::endl;
         return;
     }
     if (TryHarvestVespene()) {
         return;
     }
-
-    if (TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_DRONE, 1)) {
+    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
+        std::cout << "Researched" << std::endl;
         return;
     }
-    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST, UNIT_TYPEID::ZERG_DRONE, 1)) {
+    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
         return;
     }
     // TODO: Change to get scouted point from ideal location for new base ///
@@ -86,7 +87,7 @@ void GooseBot::OnStep() {
         
     }
 
-    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, NULL, demo_point)) {
+    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, demo_point)) {
         return;
     }
     /////////////////////////////////////////////////////////////////////////
@@ -176,6 +177,8 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
             if (hasInjection == hatchery->buffs.end()){     //if no injection
                 Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+            }else{
+                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, tumorCap[phase]);
             }
             break;
         }
@@ -244,22 +247,19 @@ const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
     return target;
 }
 
-
-size_t GooseBot::countUnitType(UNIT_TYPEID unit_type)
-{
+// Returns number of allied units of given type
+size_t GooseBot::countUnitType(UNIT_TYPEID unit_type){
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
-//returns position tag of random unit of given type
-Tag GooseBot::FindUnitTag(UNIT_TYPEID unit_type)
-{
+//returns random unit of given type
+const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
     auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    if (all_of_type.size() > 0)
-    {
-        const Unit * unit = GetRandomEntry(all_of_type);
-        return unit->tag;
+    if (all_of_type.size() != 0){
+        return GetRandomEntry(all_of_type);
+    }else{
+        return nullptr;
     }
-    return 0;   //TODO: May cause weird behavior when the result is passed to GetUnit(), check later.
 }
 
 bool GooseBot::TryHarvestVespene() {
@@ -291,25 +291,22 @@ bool GooseBot::TryHarvestVespene() {
     
 }
 
-bool GooseBot::TryBirthQueen()
-{
-    const ObservationInterface* observation = Observation();
-    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    if (countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase])
-    {   if (bases.size() > 0)
-        {   for (const auto& order : bases[0]->orders)
-            {   if (order.ability_id == ABILITY_ID::TRAIN_QUEEN)
-                {
-                    return false;
-                }
-            }
-            Actions()->UnitCommand(bases[0], ABILITY_ID::TRAIN_QUEEN);
-            return true;
-        }
+bool GooseBot::TryBirthQueen(){
+    if (   (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
+        || (actionPending(ABILITY_ID::TRAIN_QUEEN))  ){
+        return false;
+    }
+    const Unit * base = GetMainBase();
+    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]) && (base != nullptr)){
+        Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
+        return true;
+    }else{
+        return false;
     }
     return false;
 }
 
+//Check if can afford unit
 bool GooseBot::CanAfford(UNIT_TYPEID unit){
     const ObservationInterface* observation = Observation();
     int mineral_supply = observation->GetMinerals();
@@ -318,14 +315,35 @@ bool GooseBot::CanAfford(UNIT_TYPEID unit){
     for (auto data : unit_data){
         if (data.unit_type_id == unit){ 
             if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
-                return true;
+                if ( ((data.tech_requirement != UNIT_TYPEID::INVALID) && (countUnitType(data.tech_requirement) > 0))
+                    || (data.tech_requirement == UNIT_TYPEID::INVALID) ){
+                    return true;
+                }
             }else{
                 return false;
             }
         }
     }
     return false;
+}
 
+//Check if can afford upgrade
+bool GooseBot::CanAfford(UPGRADE_ID upgrade){
+    const ObservationInterface* observation = Observation();
+    int mineral_supply = observation->GetMinerals();
+    int gas_supply = observation->GetVespene();
+    auto const upgrade_data = observation->GetUpgradeData();
+    for (auto data : upgrade_data){
+        if (data.upgrade_id == static_cast<uint32_t>(upgrade)){ 
+            if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    }
+    std::cout << "data does not contain the ability ";
+    return false;
 }
 
 void GooseBot::VerifyPhase(){
@@ -336,16 +354,26 @@ void GooseBot::VerifyPhase(){
         while (1){
             if (unit->unit_type == targetStruct[i]){
                 ++i;
-            }
-            else{
+            }else{
                 break;
             }
         }
     }
     phase = i;
 }
-// EFFECT_INJECTLARVA target hatchery/lair
-// MORPH_LAIR no target
+
+bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade){
+    if (actionPending(ability)
+        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())){
+        return false;
+    }
+    const Unit* researcher = FindUnit(researcher_type);
+    if (researcher != nullptr && CanAfford(upgrade)){
+        Actions()->UnitCommand(researcher, ability);
+        return true;
+    }else{
+        return false;
+    }
+}
 
 // MORPH_OVERLORDTRANSPORT no target
-// BUFF_ID QUEENSPAWNLARVATIMER

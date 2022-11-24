@@ -1,4 +1,20 @@
 #include "GooseBot.h"
+
+bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
+	//get an observation of the current game state
+	const ObservationInterface* observation = Observation(); 
+
+	// If no worker is already building one, get a random worker to build one
+	const Unit* unit = FindUnit(worker_unit);
+
+	// Check to see if unit can build there
+	if (Query()->Placement(ability_type_for_structure, location_point)) {
+		Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
+		return true;
+	}
+	
+}
+
 /// <summary>
 /// Checks if there structur can be morphed, if true morphs/builds structure
 /// Requires preexisting unit to morph from
@@ -7,171 +23,160 @@
 /// <param name="location_tag"></param>
 /// <param name="unit_type"></param>
 /// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
-bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, const Point2D& location_point, UNIT_TYPEID unit_type) {
-	//get an observation of the current game state
+bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID worker_unit) {
 	const ObservationInterface* observation = Observation(); 
-	
-	//Get a list of all workers belonging to the bot
-	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-
-	//if we have no workers, we cannot build so we return false
-    if (workers.empty()) {
-        return false;
-    }
-
-    // Check to see if there is already a worker heading out to build it
-    for (const auto& worker : workers) {
-        for (const auto& order : worker->orders) {
-            if (order.ability_id == ability_type_for_structure) {
-                return false;
-            }
-        }
-    }
-
-	// If no worker is already building one, get a random worker to build one
-	const Unit* unit = GetRandomEntry(workers);
-
-	/* If given a location tag, use unit to morph. (This is used for extractors right now) If given a point, build at point location */
-	if (location_tag != NULL) {
-		const Unit* target = observation->GetUnit(location_tag);
-		if (target->unit_type == UNIT_TYPEID::ZERG_DRONE) {
-			return false;
-		}
-		// Check to see if unit can build there
-		if (Query()->Placement(ability_type_for_structure, target->pos)) {
-			Actions()->UnitCommand(unit, ability_type_for_structure, target);
-			return true;
-		}
+	//Get a random worker
+	const Unit * worker = FindUnit(worker_unit);
+	//if we have no workers, return false
+	if (worker == nullptr) {
+		std::cout << "fails available worker or cost checks ,";
+		return false;
 	}
-	else if (location_point != Point2D(0,0)) {
-		// Check to see if unit can build there
-		if (Query()->Placement(ability_type_for_structure, location_point)) {
-			Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
-			return true;
-		}
+	// Get target to morph; note that target and worker can be the same, 
+	// but should not be the same unit type with different tags, as this would
+	// mean that a unit would try to do a self targeting action on another unit
+	const Unit* target = observation->GetUnit(location_tag);
+	if ((worker->tag != location_tag) && (target->unit_type == worker_unit)){
+		Actions()->UnitCommand(target, ability_type_for_structure);
+		std::cout << "target self targeted";
+		return true;
+	}else if (worker->tag == location_tag){		//self-targeting
+		Actions()->UnitCommand(worker, ability_type_for_structure);
+		std::cout << "worker self targeted";
+		return true;
+	}// Otherwise, builder unit different than target unit
 	
+	// Check to see if worker can morph at target location
+	if (Query()->Placement(ability_type_for_structure, target->pos)) {
+		Actions()->UnitCommand(worker, ability_type_for_structure, target);
+		std::cout << "worker targeted non-worker";
+		return true;
 	}
+	std::cout << "failing to catch success condition ,";
 	return false;
 }
+
 /// <summary>
 /// Checks if there is a Vespene Geyser nearby the hatchery, if true passes parameters to build extractor to TryMorphStructure()
 /// </summary>
 /// <returns>BOOL, true if extractor can be built, false otherwise</returns>
 bool GooseBot::TryMorphExtractor() {
-    const ObservationInterface* observation = Observation();
-    
-    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
-    if (bases.empty()) {
-        return false;
-    }
-    Point2D base_location = bases.back()->pos;
-    //only search within this radius
-    float minimum_distance = 15.0f;
-    Tag closestGeyser = 0;
-    for (const auto& geyser : geysers) {
-        float current_distance = Distance2D(base_location, geyser->pos);
-        if (current_distance < minimum_distance) {
-            if (Query()->Placement(ABILITY_ID::BUILD_EXTRACTOR, geyser->pos)) {
-                minimum_distance = current_distance;
-                closestGeyser = geyser->tag;
-            }
-        }
-    }
-
-    // In the case where there are no more available geysers nearby
-    if (closestGeyser == 0)
-    {
-        return false;
-    }
-
-    return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser);
-}
-
-bool GooseBot::TryBuildSpawningPool() {
-    const ObservationInterface* observation = Observation();
-
-	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-	Units spawn_pools = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL));
-	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
-	if (bases.empty()) {
-		return false; //adding null check here
-	}
-	Point2D base_location = bases.back()->pos;
-	size_t bases_num = bases.size();
-	size_t spawn_pools_num = spawn_pools.size();
-
-    float minimum_distance = 30.0f;
-    Point2D closest_pos = base_location;
-    for (const auto& geyser : geysers) {
-        Point2D new_pos = geyser->pos;
-        new_pos.x -= 5;
-        
-        float current_distance = Distance2D(base_location, new_pos);
-        if (current_distance < minimum_distance) {
-            if (Query()->Placement(ABILITY_ID::BUILD_SPAWNINGPOOL, new_pos)) {
-                minimum_distance = current_distance;
-                closest_pos = new_pos;
-            }
-        }
-    }
-
-    if (closest_pos == base_location) {
-        return false;
-    }
-
-    //Get a list of all workers belonging to the bot
-    Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
-
-    //if we have no workers, we cannot build so we return false
-    if (workers.empty()) {
-        return false;
-    }
-
-    const Unit* unit = GetRandomEntry(workers);
-    const AbilityID abil = ABILITY_ID::BUILD_SPAWNINGPOOL;
-    const Point2D pos = closest_pos;
-    if (Query()->Placement(abil, pos,unit)) { 
-        Actions()->UnitCommand(unit, abil, pos);
-        return true;
-    }
-
-    return false;
-}
-
-//from tutorial, adapted
-bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type, size_t struct_cap) {
-    const ObservationInterface* observation = Observation();
-    Units structs = observation->GetUnits(Unit::Alliance::Self, IsUnit(struct_type));
-    if (structs.size() >= struct_cap){
-        return false;
-    }
-    // If a unit already is building a supply structure of this type, do nothing.
-    // Also get an scv to build the structure.
-    const Unit* unit_to_build = nullptr;
-    Units units = observation->GetUnits(Unit::Alliance::Self);
-    for (const auto& unit : units) {
-           for (const auto& order : unit->orders) {
-            if (order.ability_id == ability_type_for_structure) {
-                return false;
-            }
-        }
-        if (unit->unit_type == unit_type) {
-            unit_to_build = unit;
-        }
-    }
-   
-    if (unit_to_build)
-    {
-        float rx = GetRandomScalar();
-        float ry = GetRandomScalar();
-        Actions()->UnitCommand(unit_to_build,
-                               ability_type_for_structure,
-                               Point2D(unit_to_build->pos.x + rx * 15.0f,
-                                       unit_to_build->pos.y + ry * 15.0f));
-        return true;
-    }
-    return false;
-}
+	const ObservationInterface* observation = Observation();
 	
+	size_t base_count = countUnitType(UNIT_TYPEID::ZERG_HATCHERY)
+		+ countUnitType(UNIT_TYPEID::ZERG_LAIR) + countUnitType(UNIT_TYPEID::ZERG_HIVE);
+	const Unit * base = GetNewerBase();
+	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+	if ((base == nullptr) 
+		|| (countUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*base_count)
+		|| (actionPending(ABILITY_ID::BUILD_EXTRACTOR))
+		|| (!CanAfford(UNIT_TYPEID::ZERG_EXTRACTOR))) {
+		return false;
+	}
+	//only search within this radius
+	float minimum_distance = 15.0f;
+	Tag closestGeyser = 0;
+	for (const auto& geyser : geysers) {
+		float current_distance = Distance2D(base->pos, geyser->pos);
+		if (current_distance < minimum_distance) {
+			if (Query()->Placement(ABILITY_ID::BUILD_EXTRACTOR, geyser->pos)) {
+				minimum_distance = current_distance;
+				closestGeyser = geyser->tag;
+			}
+		}
+	}
+	// In the case where there are no more available geysers nearby
+	if (closestGeyser == 0) {
+		return false;
+	}
+	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser);
+}
 
+// from tutorial, adapted
+// Try to build a structure with given ability, struct type, 
+// & optional worker type[drone default], max num of structs desired[1 default] 
+bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type, size_t struct_cap) {
+	// If a unit already is building a supply structure of this type, do nothing.
+	// OR If we have the number of these we want already, do nothing
+	// OR If we can't afford it, do nothing
+	if (actionPending(ability_type_for_structure) || (countUnitType(struct_type) >= struct_cap) || !CanAfford(struct_type)){
+		return false;
+	}
+	// Otherwise, build
+    // Get a unit to build the structure.
+    const Unit* unit_to_build = FindUnit(worker_type);
+	// Try to build at a position in a random direction from builder
+    float rx = GetRandomScalar();
+    float ry = GetRandomScalar();
+	Point2D pos = Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f);
+		// Check to see if worker can morph at target location
+	if (Query()->Placement(ability_type_for_structure, pos)) {
+		Actions()->UnitCommand(unit_to_build, ability_type_for_structure, pos);
+		std::cout << "worker found valid build position ";
+		return true;
+	}
+    // Query failed
+    return false;
+}
+
+//try to morph hatchery into lair
+bool GooseBot::TryMorphLair() {
+	const Unit *base = GetMainBase();
+	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) 
+		|| actionPending(ABILITY_ID::MORPH_LAIR) || (base->unit_type != UNIT_TYPEID::ZERG_HATCHERY)) {
+		return false;
+	}
+	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
+}
+
+//return true if the action is pending, false otherwise
+bool GooseBot::actionPending(ABILITY_ID action){
+	return (std::find(pendingOrders.begin(), pendingOrders.end(), action) != pendingOrders.end());
+}
+
+//get the pending orders for the game step
+void GooseBot::VerifyPending(){
+	pendingOrders.clear();
+	const ObservationInterface* observation = Observation();
+	Units workers = observation->GetUnits(Unit::Alliance::Self);
+	for (const auto& worker : workers) {
+		for (const auto& order : worker->orders) {
+			pendingOrders.insert(order.ability_id);
+		}
+	}
+}
+
+const Unit* GooseBot::GetMainBase(){
+	const ObservationInterface* observation = Observation();
+	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+	if (bases.empty()){
+		bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR));
+		if (bases.empty()){
+			bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE));
+			if(bases.empty()){
+				return nullptr;
+			}
+		}
+	}
+	return GetRandomEntry(bases);
+}
+
+const Unit* GooseBot::GetNewerBase(){
+	const ObservationInterface* observation = Observation();
+	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+	if (bases.empty()){
+		bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR));
+		if (bases.empty()){
+			bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE));
+			if (!bases.empty()){
+				return GetRandomEntry(bases);
+			}else{
+				return nullptr;
+			}
+		}else{
+			return GetRandomEntry(bases);
+		}
+	}else{
+		return GetRandomEntry(bases);
+	}
+}
