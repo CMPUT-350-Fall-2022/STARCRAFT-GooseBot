@@ -1,5 +1,15 @@
 #include "GooseBot.h"
 
+#define larva UNIT_TYPEID::ZERG_LARVA
+#define drone UNIT_TYPEID::ZERG_DRONE
+#define zergl UNIT_TYPEID::ZERG_ZERGLING
+#define banel UNIT_TYPEID::ZERG_BANELING
+#define overl UNIT_TYPEID::ZERG_OVERLORD
+#define queen UNIT_TYPEID::ZERG_QUEEN
+#define roach UNIT_TYPEID::ZERG_ROACH
+#define mutal UNIT_TYPEID::ZERG_MUTALISK
+
+
 using namespace sc2;
 
 void GooseBot::OnGameStart() { 
@@ -60,7 +70,9 @@ void GooseBot::OnStep() {
         return;
     }
 
-
+    if (ArmyReady() && EnemyLocated()) {
+        Attack();
+    }
     
 }
 
@@ -69,29 +81,48 @@ void GooseBot::OnStep() {
 void GooseBot::OnUnitIdle(const Unit* unit) {
     //get the current game state observation
     const ObservationInterface* observation = Observation();
+    size_t drone_count = countUnitType(drone);
+    size_t zergl_count = countUnitType(zergl);
+    size_t banel_count = countUnitType(banel);
+    size_t roach_count = countUnitType(roach);
+    size_t mutal_count = countUnitType(mutal);
 
     //for our unit pointer, we do a switch-case dependent on it's type
 	switch (unit->unit_type.ToType())
     {
         //if the unit is a larva unit
-		case UNIT_TYPEID::ZERG_LARVA:
+		//case UNIT_TYPEID::ZERG_LARVA:
+    case larva:
         {
             //while our supply limit is less than or equal to our supply limit cap - 1
 			while (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
             {
+
+
                 //if our total number of workers is less than 30
-                if ((observation->GetFoodWorkers() <= 16 - 2)) {        //TODO: change this limit to rely on our number of hatcheries
+                if ((drone_count <= 16 - 2)) {        //TODO: change this limit to rely on our number of hatcheries
                     //build a worker
 				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
 				break;
 			}
 
-            //if our army count is less than or equal to 10
-                if (observation->GetFoodArmy() <= 10) {
+            //if our zergling count is less than or equal to 10
+                if (zergl_count <= 10) {
                     //try to train a zergling (this can't be done unless there is an existing spawning pool
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
                     break;
                 }
+
+                if (roach_count <= 5) {
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                    break;
+                }
+
+                if (mutal_count < zergl_count) {
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                    break;
+                }
+
 			}
             
             //spawns overlord to increase supply cap when we have only one available opening
@@ -101,7 +132,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             
 		}
 
-		case UNIT_TYPEID::ZERG_DRONE:
+		case drone:
         {
 
 			const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
@@ -113,13 +144,13 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 			break;
 		}
 
-        case UNIT_TYPEID::ZERG_OVERLORD:
+        case overl:
         {
             scout(unit);
             break;
         }
 
-        case UNIT_TYPEID::ZERG_QUEEN:
+        case queen:
         {
             const Unit * hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
             //iterator pointing to buff if found, end if not found
@@ -128,6 +159,14 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
                 Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
             }
             break;
+        }
+
+        case zergl:
+        {
+            if (banel_count < zergl_count) {
+                    Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
+                    break;
+                }
         }
         
 		default:
