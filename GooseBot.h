@@ -40,6 +40,12 @@ class GooseBot : public sc2::Agent {
         void scout(const Unit* unit);
         void VerifyPhase();
 
+        // Return true if two units are within a certain distance of each other
+        bool UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const;
+
+        void AppendBases(Units& units, Unit::Alliance alliance, UNIT_TYPEID id);
+        const std::vector<Point2D> FindBaseBuildingGrounds();
+        const Units FindAllMineralPatches();
         const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 

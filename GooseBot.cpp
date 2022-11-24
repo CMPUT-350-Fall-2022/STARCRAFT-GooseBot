@@ -184,8 +184,77 @@ void GooseBot::scout(const Unit* unit)
 {
     const GameInfo& game_info = Observation()->GetGameInfo();
     auto enemyStartLocations = game_info.enemy_start_locations;
+    // auto enemyStartLocations = FindBaseBuildingGrounds();
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
+
+
+void GooseBot::AppendBases(Units& units, Unit::Alliance alliance, UNIT_TYPEID id)
+{
+    const ObservationInterface* observation = Observation();
+    Units bases = observation->GetUnits(alliance, IsUnit(id));
+    units.insert(units.end(), bases.begin(), bases.end());
+}
+
+
+const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
+{
+    // Finding possible places to build base:
+    /* 1. find all mineral patches
+    2. exclude patches within a certain distance of a town hall (e.g hatchery/command center), may require sending scouts to places on the map to see things
+    3. query that we can build a town hall at each location, try a few times with slightly differnt coordinate offsets from the each mineral patch  //TODO:
+    4. if all good, add to list of possible locations, make sure sorted by nearest. //TODO:
+    */
+    Units units = FindAllMineralPatches();
+    const ObservationInterface* observation = Observation();
+    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::ZERG_HATCHERY);
+    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::TERRAN_COMMANDCENTER);
+    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::PROTOSS_NEXUS);
+    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::ZERG_HATCHERY);
+    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::TERRAN_COMMANDCENTER);
+    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::PROTOSS_NEXUS);
+    std::vector<Point2D> grounds = {};
+    for (auto &patch : units)
+    {   for (const auto &base : bases)
+        {
+            if (!UnitsWithinProximity(15.f, (*patch), (*base)))
+            {
+                Point2D groundPos = patch->pos;
+                grounds.push_back(groundPos);
+                // Point2D groundPos(patch->pos.x + GetRandomScalar() * 5,
+                //                   patch->pos.y + GetRandomScalar() * 5);    //TODO: Might give a bad spot.
+
+            }
+        }
+    }
+    return grounds;
+
+}
+
+
+bool GooseBot::UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const
+{
+    Point2D unit1Pos = unit1.pos;
+    Point2D unit2Pos = unit2.pos;
+    return Distance2D(unit1Pos, unit2Pos) < proximity;
+}
+
+
+const Units GooseBot::FindAllMineralPatches()
+{
+    Units units = Observation()->GetUnits(Unit::Alliance::Neutral);
+    Units patches = {};
+    for (const auto& u : units)
+    {
+        if (u->unit_type == UNIT_TYPEID::NEUTRAL_MINERALFIELD)
+        {
+            patches.push_back(u);
+        }        
+    }
+    return patches;
+}
+
 
 const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start) {
     Units units = Observation()->GetUnits(Unit::Alliance::Self);
@@ -209,22 +278,18 @@ const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& 
 }
 
 
-
 const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
-    Units units = Observation()->GetUnits(Unit::Alliance::Neutral);
+    Units units = FindAllMineralPatches();
     float distance = std::numeric_limits<float>::max();
     const Unit * target = nullptr;
     for (const auto& u : units)
     {
-        if (u->unit_type == UNIT_TYPEID::NEUTRAL_MINERALFIELD)
+        float d = DistanceSquared2D(u->pos, start);
+        if (d < distance)
         {
-            float d = DistanceSquared2D(u->pos, start);
-            if (d < distance)
-            {
-                distance = d;
-                target = u;
-            }            
-        }        
+            distance = d;
+            target = u;
+        }                   
     }
     return target;
 }
@@ -329,6 +394,7 @@ void GooseBot::VerifyPhase(){
     }
     phase = i;
 }
+
 // EFFECT_INJECTLARVA target hatchery/lair
 // MORPH_LAIR no target
 
