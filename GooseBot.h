@@ -23,8 +23,8 @@ class GooseBot : public sc2::Agent {
         virtual void OnUnitIdle(const sc2::Unit* unit) final;
         virtual void OnGameEnd();
 
-        bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
-        bool TryMorphExtractor();
+        bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag = NULL, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
+	    bool TryMorphExtractor();
         bool TryBuildSpawningPool();
         bool TryBirthQueen();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);

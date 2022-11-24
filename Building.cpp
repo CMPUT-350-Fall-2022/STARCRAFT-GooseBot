@@ -7,24 +7,14 @@
 /// <param name="location_tag"></param>
 /// <param name="unit_type"></param>
 /// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
-bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID unit_type) {
-    //get an observation of the current game state
-    const ObservationInterface* observation = Observation(); 
-    
-    //Get a list of all workers belonging to the bot
-    Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    
+bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, const Point2D& location_point, UNIT_TYPEID unit_type) {
+	//get an observation of the current game state
+	const ObservationInterface* observation = Observation(); 
+	
+	//Get a list of all workers belonging to the bot
+	Units workers = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 
-    if (location_tag == 0)
-    {
-        return false;
-    }
-    const Unit* target = observation->GetUnit(location_tag);
-    if (target->unit_type == UNIT_TYPEID::ZERG_DRONE){
-        return false;
-    }
-
-    //if we have no workers, we cannot build so we return false
+	//if we have no workers, we cannot build so we return false
     if (workers.empty()) {
         return false;
     }
@@ -38,15 +28,30 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
         }
     }
 
-    // If no worker is already building one, get a random worker to build one
-    const Unit* unit = GetRandomEntry(workers);
-    
-    // Check to see if unit can build there
-    if (Query()->Placement(ability_type_for_structure, target->pos)) {
-        Actions()->UnitCommand(unit, ability_type_for_structure, target);
-        return true;
-    }
-    return false;
+	// If no worker is already building one, get a random worker to build one
+	const Unit* unit = GetRandomEntry(workers);
+
+	/* If given a location tag, use unit to morph. (This is used for extractors right now) If given a point, build at point location */
+	if (location_tag != NULL) {
+		const Unit* target = observation->GetUnit(location_tag);
+		if (target->unit_type == UNIT_TYPEID::ZERG_DRONE) {
+			return false;
+		}
+		// Check to see if unit can build there
+		if (Query()->Placement(ability_type_for_structure, target->pos)) {
+			Actions()->UnitCommand(unit, ability_type_for_structure, target);
+			return true;
+		}
+	}
+	else if (location_point != Point2D(0,0)) {
+		// Check to see if unit can build there
+		if (Query()->Placement(ability_type_for_structure, location_point)) {
+			Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
+			return true;
+		}
+	
+	}
+	return false;
 }
 /// <summary>
 /// Checks if there is a Vespene Geyser nearby the hatchery, if true passes parameters to build extractor to TryMorphStructure()

@@ -56,7 +56,7 @@ void GooseBot::OnStep() {
         VerifyPhase();
         return;
     }
-    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]), builders[phase])){
+    if (TryMorphStructure(abilities[phase], FindUnitTag(builders[phase]),Point2D(0,0), builders[phase])){
         VerifyPhase();
         return;
     }
@@ -76,6 +76,21 @@ void GooseBot::OnStep() {
     if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST, UNIT_TYPEID::ZERG_DRONE, 1)) {
         return;
     }
+    // TODO: Change to get scouted point from ideal location for new base ///
+    const GameInfo& game_info = Observation()->GetGameInfo();
+    auto enemyStartLocations = game_info.enemy_start_locations;
+    Point2D demo_point = Point2D(0, 0);
+    if (enemyStartLocations.empty() == false) { 
+      
+        demo_point = enemyStartLocations.back();
+        
+    }
+
+    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, NULL, demo_point)) {
+        return;
+    }
+    /////////////////////////////////////////////////////////////////////////
+
 
     if (ArmyReady() && EnemyLocated()) {
         Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
