@@ -77,10 +77,15 @@ void GooseBot::OnStep() {
         return;
     }
 
-    if (ArmyReady() && EnemyLocated()) {
-        Attack();      //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
+    if (EnemyLocated) {
+        Attack();
         return;
-    }   
+    }
+
+    //if (ArmyReady() && EnemyLocated()) {
+     //   Attack();      //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
+     //   return;
+    //}   
 }
 
 
@@ -98,81 +103,93 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     switch (unit->unit_type.ToType())
     {
         //case UNIT_TYPEID::ZERG_LARVA:
-        case larva:
-        {
-            //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
-            if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
-            {   //if our total number of workers is less than 30
-                if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
-                {   //build a worker
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-                    break;
-                }
-
-                //if our zergling count is less than or equal to 10
-                if (zergl_count <= 10)
-                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (roach_count <= 5)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (mutal_count < zergl_count)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-                    break;
-                }
-                //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
-            }
-            
-            //spawns overlord to increase supply cap when we have only one available opening
-            if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
-            }
-            break;
-        }
-
-		case drone:
-        {
-            const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
-            if (!mineral_target)
-            {
+    case larva:
+    {
+        //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
+        if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
+        {   //if our total number of workers is less than 30
+            if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
+            {   //build a worker
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
-            Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
-            break;
-        }
 
-        case overl:
-        {
-            scout(unit);
-            break;
-        }
-
-        case queen:
-        {
-            const Unit * hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
-            //iterator pointing to buff if found, end if not found
-            auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
-            if (hasInjection == hatchery->buffs.end()){     //if no injection
-                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+            //if our zergling count is less than or equal to 10
+            if (zergl_count <= 10)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
             }
-            break;
+
+            if (roach_count <= 5)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+
+
+                break;
+            }
+
+            if (mutal_count < zergl_count)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+
+
+                break;
+            }
+            //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
         }
 
-        case zergl:
+        //spawns overlord to increase supply cap when we have only one available opening
+        //if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
         {
-            if (banel_count < zergl_count) {
-                    Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
-                    break;
-                }
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
+        break;
+    }
+
+    case drone:
+    {
+        const Unit* mineral_target = FindNearestMineralPatch(unit->pos);
+        if (!mineral_target)
+        {
+            break;
+        }
+        Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+        break;
+    }
+
+    case overl:
+    {
+        scout(unit);
+        break;
+    }
+
+    case queen:
+    {
+        const Unit* hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
+        //iterator pointing to buff if found, end if not found
+        auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
+        if (hasInjection == hatchery->buffs.end()) {     //if no injection
+            Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+        }
+        break;
+    }
+
+    case zergl:
+    {
+        if (banel_count < zergl_count) {
+            Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
+
+        }
+    }
+
+    case banel:
+    case mutal:
+    case roach: 
+    {
+        army.push_back(unit);
+        break;
+    }
         
         default:
             break;
@@ -330,6 +347,11 @@ void GooseBot::VerifyPhase(){
     }
     phase = i;
 }
+
+Units GooseBot::getArmy() { return army; }
+
+Point2D GooseBot::getEnemyLocation() { return enemy_base; }
+
 // EFFECT_INJECTLARVA target hatchery/lair
 // MORPH_LAIR no target
 

@@ -31,7 +31,7 @@ class GooseBot : public sc2::Agent {
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
 	    
         bool ArmyReady();
-        bool EnemyLocated();
+        
         void Attack();
 
         size_t countUnitType(UNIT_TYPEID unit_type);
@@ -45,6 +45,10 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+
+        Units getArmy();
+        Point2D getEnemyLocation();
+
     private:
         enum PHASE {SPAWN, ZERGLINGS, END};
 
@@ -56,6 +60,10 @@ class GooseBot : public sc2::Agent {
         const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_LAIR};
         const UnitList builders = {UNIT_TYPEID::ZERG_DRONE, UNIT_TYPEID::ZERG_HATCHERY};
         const std::array<ABILITY_ID, 2> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::MORPH_LAIR};
+
+        Units army;
+        Point2D enemy_base;
+        bool EnemyLocated = false;
 
 
 
