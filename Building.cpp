@@ -6,6 +6,10 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Po
 
 	// If no worker is already building one, get a random worker to build one
 	const Unit* unit = FindUnit(worker_unit);
+	if (unit == nullptr) {
+		std::cout << "fails available worker check ,";
+		return false;
+	}
 
 	// Check to see if unit can build there
 	if (Query()->Placement(ability_type_for_structure, location_point)) {
@@ -29,7 +33,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	const Unit * worker = FindUnit(worker_unit);
 	//if we have no workers, return false
 	if (worker == nullptr) {
-		std::cout << "fails available worker or cost checks ,";
+		std::cout << "fails available worker check ,";
 		return false;
 	}
 	// Get target to morph; note that target and worker can be the same, 
