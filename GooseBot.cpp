@@ -299,7 +299,8 @@ bool GooseBot::TryBirthQueen(){
     const Unit * base = GetMainBase();
     if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]) && (base != nullptr)){
         Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
-        return true;
+        return false;//true;
+
     }else{
         return false;
     }
