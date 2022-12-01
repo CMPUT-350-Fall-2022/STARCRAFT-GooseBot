@@ -146,7 +146,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             }
             
             //spawns overlord to increase supply cap when we have only one available opening
-            if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
+            if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < 3)
             {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
             }
@@ -178,7 +178,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             if (hasInjection == hatchery->buffs.end()){     //if no injection
                 Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
             }else{
-                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, tumorCap[phase]);
+                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, 10);
             }
             break;
         }
@@ -282,7 +282,7 @@ bool GooseBot::TryBirthQueen(){
         return false;
     }
     const Unit * base = GetMainBase();
-    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]) && (base != nullptr)){
+    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queen_cap) && (base != nullptr)){
         Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
         return true;
 
