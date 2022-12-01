@@ -48,14 +48,23 @@ class GooseBot : public sc2::Agent {
         bool Attack();
 
         void VerifyPhase();
+        void CountBases();
+        void SetDroneCap();
+        void SetQueenCap();
+        void SetOverlordCap();
         void VerifyPending();
 
         const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+
     private:
-        enum PHASE {SPAWN, ZERGLINGS, ROACHES, END};
+        size_t num_bases;
+        size_t drone_cap;
+        size_t queen_cap;
+
+        enum PHASE {INIT, SPAWN, ZERGLINGS, ROACHES, END};
 
         using UnitList = std::array<UNIT_TYPEID, END>;
 
@@ -64,9 +73,6 @@ class GooseBot : public sc2::Agent {
         std::vector<UPGRADE_ID> upgraded;
 
         size_t phase = 0;
-        const std::array<size_t, END> overlordCap = {2, 3, 5};
-        const std::array<size_t, END> queenCap = {1, 2, 2};
-        const std::array<size_t, END> tumorCap = {1, 2, 3};
 
         // 3rd set dummies for moment
         const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BROODLORD};

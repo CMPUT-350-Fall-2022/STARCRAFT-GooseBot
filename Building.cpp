@@ -184,3 +184,12 @@ const Unit* GooseBot::GetNewerBase(){
 		return GetRandomEntry(bases);
 	}
 }
+
+//
+ void GooseBot::CountBases(){
+	num_bases = 0;
+	const ObservationInterface* observation = Observation();
+	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY)).size();
+	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR)).size();
+	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE)).size();
+}
