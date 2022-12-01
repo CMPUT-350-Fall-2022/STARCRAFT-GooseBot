@@ -59,7 +59,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         //Units roaches = observation->GetUnits(Unit::Alliance::Self, IsUnit(roach));
         //Units queens = observation->GetUnits(Unit::Alliance::Self, IsUnit(queens));
 
-        Units attack_army = getArmy();
+        //Units attack_army = getArmy();
         //for (auto& unit : attack_army) {
         //    std::cout << unit->unit_type << std::endl;
         //}
@@ -69,6 +69,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         case commc:
         case hatch:
         case nexus:
+        {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(banels, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(mutals, ABILITY_ID::ATTACK, last_seen);
@@ -77,18 +78,21 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 
 
 
-            enemy_base = unit->pos;
+            //enemy_base = unit->pos;
             EnemyLocated = true;
             if (ArmyReady()) {
-                Actions()->UnitCommand(attack_army, ABILITY_ID::ATTACK, enemy_base);
+                Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             }
             break;
+        }
         default:
+        {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             //std::cout << "enemy unit check fail" << std::endl;
 
             break;
+        }
         }
     
     //std::cout << "army check fail" << std::endl;
