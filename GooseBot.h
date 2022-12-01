@@ -21,13 +21,14 @@ class GooseBot : public sc2::Agent {
 
         virtual void OnGameStart();
         virtual void OnStep();
-        virtual void OnUnitIdle(const sc2::Unit* unit) final;
+        virtual void OnUnitIdle(const Unit* unit) final;
+        virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
-        bool TryBuildSpawningPool();
+ 
         bool TryBirthQueen();
         bool TryMorphLair();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
@@ -43,9 +44,9 @@ class GooseBot : public sc2::Agent {
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
 	    
-        bool ArmyReady();
-        bool EnemyLocated();
-        bool Attack();
+       
+        //bool EnemyLocated();
+   
 
         void VerifyPhase();
         void VerifyPending();
@@ -60,6 +61,11 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+
+        bool ArmyReady();
+        Units getArmy();
+        Point2D getEnemyLocation();
+
     private:
         enum PHASE {SPAWN, ZERGLINGS, ROACHES, END};
 
@@ -73,7 +79,8 @@ class GooseBot : public sc2::Agent {
         const std::array<size_t, END> overlordCap = {2, 3, 5};
         const std::array<size_t, END> queenCap = {1, 2, 2};
         const std::array<size_t, END> tumorCap = {1, 2, 3};
-
+        
+    
         // 3rd set dummies for moment
         const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BROODLORD};
         const std::array<ABILITY_ID, END> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::BUILD_ROACHWARREN, ABILITY_ID::TEMPLEDOORDOWN};
@@ -85,6 +92,11 @@ class GooseBot : public sc2::Agent {
 
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
         std::vector<Point2D> possibleBaseGrounds;
+
+
+        Units army;
+        Point2D enemy_base;
+        bool EnemyLocated = false;
 
 };
 #endif
