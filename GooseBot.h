@@ -14,6 +14,18 @@
 
 using namespace sc2;
 
+#define larva UNIT_TYPEID::ZERG_LARVA
+#define drone UNIT_TYPEID::ZERG_DRONE
+#define zergl UNIT_TYPEID::ZERG_ZERGLING
+#define banel UNIT_TYPEID::ZERG_BANELING
+#define overl UNIT_TYPEID::ZERG_OVERLORD
+#define queen UNIT_TYPEID::ZERG_QUEEN
+#define roach UNIT_TYPEID::ZERG_ROACH
+#define mutal UNIT_TYPEID::ZERG_MUTALISK
+#define hatch UNIT_TYPEID::ZERG_HATCHERY
+#define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
+#define nexus UNIT_TYPEID::PROTOSS_NEXUS
+
 class GooseBot : public sc2::Agent {
 
     public:
@@ -30,13 +42,17 @@ class GooseBot : public sc2::Agent {
 	    bool TryMorphExtractor();
  
         bool TryBirthQueen();
+        bool TryBuildHatchery();
         bool TryMorphLair();
+        bool TryMorphHive();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
 	    bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
         
         bool actionPending(ABILITY_ID action);
-        size_t countUnitType(UNIT_TYPEID unit_type);
+        size_t CountUnitType(UNIT_TYPEID unit_type);
+
         const Unit* FindUnit(UNIT_TYPEID unit_type);
+
         const Unit* GetMainBase();
         const Unit* GetNewerBase();
 
@@ -44,12 +60,19 @@ class GooseBot : public sc2::Agent {
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
 
-        void VerifyPhase();
+        bool BuildPhase();
         void CountBases();
         void SetDroneCap();
         void SetQueenCap();
+
+        bool ArmyPhase();
         void SetOverlordCap();
+
+        bool ResearchPhase();
+
         void VerifyPending();
+        void VerifyArmy();
+        void Prioritize();
 
         const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
@@ -58,29 +81,35 @@ class GooseBot : public sc2::Agent {
 
         Point2D GooseBot::getEnemyLocation();
         Units GooseBot::getArmy();
+        bool GooseBot::ArmyReady();
+
 
     private:
         size_t num_bases;
         size_t drone_cap;
         size_t queen_cap;
-
-        enum PHASE {INIT, SPAWN, ZERGLINGS, ROACHES, END};
-
-        using UnitList = std::array<UNIT_TYPEID, END>;
+        size_t overlord_cap = 2;
 
         std::unordered_set<ABILITY_ID> pendingOrders;
 
         std::vector<UPGRADE_ID> upgraded;
 
-        size_t phase = 0;  
+        size_t build_phase;
+        bool saving_for_building; 
+        size_t army_phase;
+        bool saving_for_army;
+        size_t research_phase;
       
-        // 3rd set dummies for moment
-        const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BROODLORD};
-        const std::array<ABILITY_ID, END> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::BUILD_ROACHWARREN, ABILITY_ID::TEMPLEDOORDOWN};
+        UNIT_TYPEID target_struct;
+        ABILITY_ID builder_ability;
+        UNIT_TYPEID builder;
 
         Units army;
+        size_t army_cap = 30;
         Point2D enemy_base;
         bool EnemyLocated = false;
+
+
 
 };
 #endif

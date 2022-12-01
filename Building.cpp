@@ -67,12 +67,12 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 bool GooseBot::TryMorphExtractor() {
 	const ObservationInterface* observation = Observation();
 	
-	size_t base_count = countUnitType(UNIT_TYPEID::ZERG_HATCHERY)
-		+ countUnitType(UNIT_TYPEID::ZERG_LAIR) + countUnitType(UNIT_TYPEID::ZERG_HIVE);
+	size_t base_count = CountUnitType(UNIT_TYPEID::ZERG_HATCHERY)
+		+ CountUnitType(UNIT_TYPEID::ZERG_LAIR) + CountUnitType(UNIT_TYPEID::ZERG_HIVE);
 	const Unit * base = GetNewerBase();
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
 	if ((base == nullptr) 
-		|| (countUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*base_count)
+		|| (CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*base_count)
 		|| (actionPending(ABILITY_ID::BUILD_EXTRACTOR))
 		|| (!CanAfford(UNIT_TYPEID::ZERG_EXTRACTOR))) {
 		return false;
@@ -103,7 +103,7 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 	// If a unit already is building a supply structure of this type, do nothing.
 	// OR If we have the number of these we want already, do nothing
 	// OR If we can't afford it, do nothing
-	if (actionPending(ability_type_for_structure) || (countUnitType(struct_type) >= struct_cap) || !CanAfford(struct_type)){
+	if (actionPending(ability_type_for_structure) || (CountUnitType(struct_type) >= struct_cap) || !CanAfford(struct_type)){
 		return false;
 	}
 	// Otherwise, build
@@ -123,11 +123,48 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
     return false;
 }
 
+
+bool GooseBot::TryBuildHatchery() {
+	const Unit* unit_to_build = FindUnit(drone);
+	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
+		|| !CanAfford(UNIT_TYPEID::ZERG_HATCHERY)
+		|| (unit_to_build == nullptr)){
+		return false;
+	}
+
+	// Try to build at a position in a random direction from 
+	// base location
+	const Unit* base = GetMainBase();
+	float rx = GetRandomScalar();
+	float ry = GetRandomScalar();
+	Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
+	if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
+			// Check to see if worker can morph at target location
+		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
+			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
+			return true;
+		}else {return false;}
+	}
+    // Query failed
+    return false;
+}
+
 //try to morph hatchery into lair
 bool GooseBot::TryMorphLair() {
 	const Unit *base = GetMainBase();
 	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) 
 		|| actionPending(ABILITY_ID::MORPH_LAIR) || (base->unit_type != UNIT_TYPEID::ZERG_HATCHERY)) {
+		return false;
+	}
+	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
+}
+
+//try to morph lair into hive
+bool GooseBot::TryMorphHive() {
+	const Unit *base = GetMainBase();
+	if ((base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
+		&& CanAfford(UNIT_TYPEID::ZERG_HIVE)
+		&& (!actionPending(ABILITY_ID::MORPH_HIVE))) {
 		return false;
 	}
 	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
@@ -193,3 +230,4 @@ const Unit* GooseBot::GetNewerBase(){
 	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR)).size();
 	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE)).size();
 }
+

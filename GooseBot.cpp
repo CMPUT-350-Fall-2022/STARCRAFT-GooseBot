@@ -50,19 +50,25 @@ void GooseBot::OnGameEnd()
 }
 
 
-void GooseBot::OnStep() { 
-    VerifyPhase();
+void GooseBot::OnStep() {
+    // Make sure pendingOrders are current
     VerifyPending();
-    if (TryBuildStructure(abilities[phase], targetStruct[phase])) {
-        std::cout << "Built structure for phase " << phase << std::endl;
-        return;
+    CountBases();
+    Prioritize();
+
+    if (saving_for_building){
+        if (BuildPhase()){
+            std::cout << "Built structure for phase " << build_phase << std::endl;
+            return;
+        }        
     }
-    if (TryMorphLair()){
-        std::cout << "Morphed Lair" << std::endl;
-        return;
+    if (saving_for_army){ 
+        if (ArmyPhase()){
+            std::cout << "Progressing in army phase " << army_phase << std::endl;
+            return;
+        }
     }
-    if (TryBirthQueen()){
-        std::cout << "Birthed Queen" << std::endl;
+    if (ResearchPhase()){
         return;
     }
     if (TryMorphExtractor()) {
@@ -72,15 +78,6 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
-    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
-        std::cout << "Researched" << std::endl;
-        return;
-    }
-    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
-        return;
-    }
-
- 
 }
 
 
@@ -88,11 +85,11 @@ void GooseBot::OnStep() {
 void GooseBot::OnUnitIdle(const Unit* unit) {
     //get the current game state observation
     const ObservationInterface* observation = Observation();
-    size_t drone_count = countUnitType(drone);
-    size_t zergl_count = countUnitType(zergl);
-    size_t banel_count = countUnitType(banel);
-    size_t roach_count = countUnitType(roach);
-    size_t mutal_count = countUnitType(mutal);
+    size_t drone_count = CountUnitType(drone);
+    size_t zergl_count = CountUnitType(zergl);
+    size_t banel_count = CountUnitType(banel);
+    size_t roach_count = CountUnitType(roach);
+    size_t mutal_count = CountUnitType(mutal);
 
     //for our unit pointer, we do a switch-case dependent on it's type
     switch (unit->unit_type.ToType())
@@ -103,39 +100,36 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
         {   //if our total number of workers is less than 30
-            if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
+            if ((drone_count <= drone_cap))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
+            if (saving_for_army){
+                //if our zergling count is less than or equal to 10
+                if (zergl_count <= 10)
+                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                    break;
+                }
 
-            //if our zergling count is less than or equal to 10
-            if (zergl_count <= 10)
-            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                break;
-            }
+                if (roach_count <= 5)
+                {
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                    break;
+                }
 
-            if (roach_count <= 5)
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-
-
-                break;
-            }
-
-            if (mutal_count < zergl_count)
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-
-
-                break;
+                if (mutal_count < zergl_count)
+                {
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                    break;
+                }
             }
             //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
         }
 
-        //spawns overlord to increase supply cap when we have only one available opening
-        //if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
+        //spawns overlord to increase supply cap when we need supply increase
+        if (CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlord_cap)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
@@ -192,7 +186,6 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             break;
     }
 }
-
 
 // Very simple for now.
 void GooseBot::scout(const Unit* unit)
@@ -275,33 +268,18 @@ bool GooseBot::TryHarvestVespene() {
 
 bool GooseBot::TryBirthQueen(){
     if (   (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
-        || (actionPending(ABILITY_ID::TRAIN_QUEEN))  ){
+        || (actionPending(ABILITY_ID::TRAIN_QUEEN))
+        || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= queen_cap)  ){
         return false;
     }
-    const Unit * base = GetMainBase();
-    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queen_cap) && (base != nullptr)){
+    const Unit * base = GetNewerBase();
+    if (base != nullptr){
         Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
         return true;
-
     }else{
         return false;
     }
     return false;
-}
-
-bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade){
-    if (actionPending(ability)
-        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())) {
-        return false;
-    }
-    const Unit* researcher = FindUnit(researcher_type);
-    if (researcher != nullptr && CanAfford(upgrade)) {
-        Actions()->UnitCommand(researcher, ability);
-        return true;
-    }
-    else {
-        return false;
-    }
 }
 
 Units GooseBot::getArmy() { return army; }

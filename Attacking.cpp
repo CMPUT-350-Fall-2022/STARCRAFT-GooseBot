@@ -1,15 +1,4 @@
 #include "GooseBot.h"
-#define larva UNIT_TYPEID::ZERG_LARVA
-#define drone UNIT_TYPEID::ZERG_DRONE
-#define zergl UNIT_TYPEID::ZERG_ZERGLING
-#define banel UNIT_TYPEID::ZERG_BANELING
-#define overl UNIT_TYPEID::ZERG_OVERLORD
-#define queen UNIT_TYPEID::ZERG_QUEEN
-#define roach UNIT_TYPEID::ZERG_ROACH
-#define mutal UNIT_TYPEID::ZERG_MUTALISK
-#define hatch UNIT_TYPEID::ZERG_HATCHERY
-#define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
-#define nexus UNIT_TYPEID::PROTOSS_NEXUS
 
 bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
     size_t z_ideal = 10, b_ideal = 10, r_ideal = 0, m_ideal = 0, q_ideal = 0;
@@ -35,11 +24,11 @@ bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
 }
 
 bool GooseBot::ArmyReady() {
-    size_t zergl_count = countUnitType(zergl);
-    size_t banel_count = countUnitType(banel);
-    size_t roach_count = countUnitType(roach);
-    size_t mutal_count = countUnitType(mutal);
-    size_t queen_count = countUnitType(queen);
+    size_t zergl_count = CountUnitType(zergl);
+    size_t banel_count = CountUnitType(banel);
+    size_t roach_count = CountUnitType(roach);
+    size_t mutal_count = CountUnitType(mutal);
+    size_t queen_count = CountUnitType(queen);
 
     //return checkConditions(zergl_count, banel_count, roach_count, mutal_count, queen_count);
     return true;
@@ -92,4 +81,37 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         }
     
     //std::cout << "army check fail" << std::endl;
+}
+
+bool GooseBot::ArmyPhase(){
+    SetDroneCap();
+    SetQueenCap();
+    SetOverlordCap();
+
+    if (TryBirthQueen()){
+        return true;
+    }
+    VerifyArmy();
+    if (army.size() >= army_cap && EnemyLocated){
+        Actions()->UnitCommand(army, ABILITY_ID::SMART, enemy_base);
+            return true;
+    }
+    return false;
+}
+
+void GooseBot::VerifyArmy(){
+    army.clear();
+    const ObservationInterface* observation = Observation();
+    Units Z = observation->GetUnits(Unit::Alliance::Self, IsUnit(zergl));
+    for (auto z : Z){
+        army.push_back(z);
+    }
+    Units R = observation->GetUnits(Unit::Alliance::Self, IsUnit(roach));
+    for (auto r : R){
+        army.push_back(r);
+    }
+    Units B = observation->GetUnits(Unit::Alliance::Self, IsUnit(banel));
+    for (auto b : B){
+        army.push_back(b);
+    }
 }

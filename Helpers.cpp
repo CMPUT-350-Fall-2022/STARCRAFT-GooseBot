@@ -1,39 +1,39 @@
 #include "GooseBot.h"
 
-void GooseBot::VerifyPhase(){
-    phase = 0;
-    CountBases();
-    SetDroneCap();
-    SetQueenCap();
+// Assumes up-to-date num_bases
+bool GooseBot::BuildPhase(){
+    build_phase = 0;
 
-    if (countUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) == 0){
-        return;
-    }else{++phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_SPAWNINGPOOL, UNIT_TYPEID::ZERG_SPAWNINGPOOL);
+    }else{++build_phase;}
     if (num_bases < 2){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_ROACHWARREN) == 0){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_BANELINGNEST) == 0){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_LAIR) == 0){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_SPIRE) == 0){
-        return;
-    }else{++phase;}
+        return TryBuildHatchery();
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_ROACHWARREN) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN);
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_BANELINGNEST) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST);
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 0){
+        return TryMorphLair();
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_SPIRE) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_SPIRE, UNIT_TYPEID::ZERG_SPIRE);
+    }else{++build_phase;}
     if (num_bases < 3){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_INFESTATIONPIT) == 0){
-        return;
-    }else{++phase;}
-    if (countUnitType(UNIT_TYPEID::ZERG_HIVE) == 0){
-        return;
-    }else{++phase;}
-    
+        return TryBuildHatchery();
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_INFESTATIONPIT) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_INFESTATIONPIT, UNIT_TYPEID::ZERG_INFESTATIONPIT);
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_HIVE) == 0){
+        return TryMorphHive();
+    }else{++build_phase;}
+    if (CountUnitType(UNIT_TYPEID::ZERG_ULTRALISKCAVERN) == 0){
+        return TryBuildStructure(ABILITY_ID::BUILD_ULTRALISKCAVERN, UNIT_TYPEID::ZERG_ULTRALISKCAVERN);
+    }else{return false;}
 }
 
 //Check if can afford upgrade
@@ -64,7 +64,7 @@ bool GooseBot::CanAfford(UNIT_TYPEID unit){
     for (auto data : unit_data){
         if (data.unit_type_id == unit){ 
             if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
-                if ( ((data.tech_requirement != UNIT_TYPEID::INVALID) && (countUnitType(data.tech_requirement) > 0))
+                if ( ((data.tech_requirement != UNIT_TYPEID::INVALID) && (CountUnitType(data.tech_requirement) > 0))
                     || (data.tech_requirement == UNIT_TYPEID::INVALID) ){
                     return true;
                 }
@@ -77,7 +77,7 @@ bool GooseBot::CanAfford(UNIT_TYPEID unit){
 }
 
 // Returns number of allied units of given type
-size_t GooseBot::countUnitType(UNIT_TYPEID unit_type){
+size_t GooseBot::CountUnitType(UNIT_TYPEID unit_type){
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
@@ -105,11 +105,29 @@ void GooseBot::SetDroneCap(){
 
 // Assumes up-to-date num_bases
 void GooseBot::SetQueenCap(){
-    if (countUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0){
+    if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0
+        && FindUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL)->build_progress == 1){
         queen_cap = 2*num_bases;
     }
     else{
         queen_cap = 0;
     }
 }
+
+// Assumes up-to-date num_bases
+void GooseBot::SetOverlordCap(){
+    const ObservationInterface* observation = Observation();
+    if (observation->GetFoodUsed() >= observation->GetFoodCap() - 1){
+        ++overlord_cap;
+    }
+}
+
+//TODO, make actually do its job 
+void GooseBot::Prioritize(){
+
+    saving_for_army = false;
+    saving_for_building = true;
+    
+}
+
 
