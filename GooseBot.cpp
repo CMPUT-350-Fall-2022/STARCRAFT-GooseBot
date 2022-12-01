@@ -566,13 +566,19 @@ void GooseBot::VerifyPhase(){
     auto units = observation->GetUnits(Unit::Alliance::Self);
     size_t i = 0;
     for (auto unit : units){
-        while (1){
-            if (unit->unit_type == targetStruct[i]){
-                ++i;
-            }else{
-                break;
-            }
+        auto it = find(targetStruct.begin(), targetStruct.end(), unit->unit_type);
+
+        // If element was found
+        if (it != targetStruct.end())
+        {
+            // calculating the index
+            i = it - targetStruct.begin();
+           
         }
+        else {
+            //not found  
+        }
+      
     }
     phase = i;
 }
