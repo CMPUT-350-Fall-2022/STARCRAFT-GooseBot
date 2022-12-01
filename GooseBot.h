@@ -30,9 +30,8 @@ class GooseBot : public sc2::Agent {
         bool TryBirthQueen();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
 	    
-        bool ArmyReady();
-        
-        void Attack();
+       
+
 
         size_t countUnitType(UNIT_TYPEID unit_type);
  
@@ -46,6 +45,7 @@ class GooseBot : public sc2::Agent {
 
         bool GooseBot::TryHarvestVespene();
 
+        bool ArmyReady();
         Units getArmy();
         Point2D getEnemyLocation();
 
