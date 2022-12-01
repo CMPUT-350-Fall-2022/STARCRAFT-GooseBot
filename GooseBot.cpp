@@ -12,7 +12,9 @@
 
 using namespace sc2;
 
-void GooseBot::OnGameStart() { 
+void GooseBot::OnGameStart()
+{ 
+    possibleBaseGrounds = FindBaseBuildingGrounds();
     return; 
 }
 
@@ -80,14 +82,14 @@ void GooseBot::OnStep() {
     // TODO: Change to get scouted point from ideal location for new base ///
     const GameInfo& game_info = Observation()->GetGameInfo();
     auto enemyStartLocations = game_info.enemy_start_locations;
-    Point2D demo_point = Point2D(0, 0);
-    if (enemyStartLocations.empty() == false) { 
+    // Point2D demo_point = Point2D(0, 0);
+    // if (enemyStartLocations.empty() == false) { 
       
-        demo_point = enemyStartLocations.back();
+    //     demo_point = enemyStartLocations.back();
         
-    }
+    // }
 
-    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, demo_point)) {
+    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, possibleBaseGrounds[0])) {
         return;
     }
     /////////////////////////////////////////////////////////////////////////
@@ -227,31 +229,208 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
     3. query that we can build a town hall at each location, try a few times with slightly differnt coordinate offsets from the each mineral patch  //TODO:
     4. if all good, add to list of possible locations, make sure sorted by nearest. //TODO:
     */
-    Units units = FindAllMineralPatches();
-    const ObservationInterface* observation = Observation();
-    Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::ZERG_HATCHERY);
-    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::TERRAN_COMMANDCENTER);
-    AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::PROTOSS_NEXUS);
-    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::ZERG_HATCHERY);
-    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::TERRAN_COMMANDCENTER);
-    AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::PROTOSS_NEXUS);
-    std::vector<Point2D> grounds = {};
-    for (auto &patch : units)
-    {   for (const auto &base : bases)
-        {
-            if (!UnitsWithinProximity(15.f, (*patch), (*base)))
-            {
-                Point2D groundPos = patch->pos;
-                grounds.push_back(groundPos);
-                // Point2D groundPos(patch->pos.x + GetRandomScalar() * 5,
-                //                   patch->pos.y + GetRandomScalar() * 5);    //TODO: Might give a bad spot.
+    // Units units = FindAllMineralPatches();
+    // // const ObservationInterface* observation = Observation();
+    // // Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+    // // AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::ZERG_HATCHERY);
+    // // AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::TERRAN_COMMANDCENTER);
+    // // AppendBases(bases, Unit::Alliance::Ally, UNIT_TYPEID::PROTOSS_NEXUS);
+    // // AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::ZERG_HATCHERY);
+    // // AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::TERRAN_COMMANDCENTER);
+    // // AppendBases(bases, Unit::Alliance::Enemy, UNIT_TYPEID::PROTOSS_NEXUS);
+    // std::vector<Point2D> grounds = {};
+    // for (auto &patch : units)
+    // {   
+    //     // for (const auto &base : bases)
+    //     // {
+    //     //     if (!UnitsWithinProximity(15.f, (*patch), (*base)))
+    //     //     {
+    //     //         Point2D groundPos = patch->pos;
+    //     //         grounds.push_back(groundPos);
+    //     //         // Point2D groundPos(patch->pos.x + GetRandomScalar() * 5,
+    //     //         //                   patch->pos.y + GetRandomScalar() * 5);    //TODO: Might give a bad spot.
 
+    //     //     }
+    //     // }
+    // }
+    // return grounds;
+
+
+    // Initialize each centroid to be the position of a geyser in a pair of 2 closests geysers, discarding the other (there are 2 geysers per base location)
+    // geysers = GetUnits(neutral, IsUnits(geysersTypes))
+    const ObservationInterface* observation = Observation();
+    auto geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
+    // centroids = {};
+    std::vector<Point2D> centroids = {};
+    // while geysers.size > 1
+    while (geysers.size() > 1)
+    {//     geyser = geysers.pop()
+        auto geyser = geysers.back();
+        geysers.pop_back();     // FIXME: Might make geyser above point to something invalid
+    //     centroids.push(geyser.pos)
+        centroids.push_back(geyser->pos);
+    //     minDist = Distance2D(geyser.pos, geysers[0].pos)
+        auto minDist = Distance2D(geyser->pos, geysers[0]->pos);
+    //     closest_i = 0
+        auto closest_i = 0;
+    //     for i = 1; i < geysers.size; i++
+        for (auto i = 0;  i < geysers.size();  ++i)
+        {//    dist = Distance2D(geyser.pos, geysers[i].pos)
+            auto dist = Distance2D(geyser->pos, geysers[i]->pos);
+    //         if dist < minDist
+            if (dist < minDist)
+            {//    minDist = dist
+                minDist = dist;
+    //             closest_i = i
+                closest_i = i;
             }
         }
+    //     geysers.erase(geysers.begin() + closest_i)
+        geysers.erase(geysers.begin() + closest_i);
     }
-    return grounds;
 
+    // Group minerals and vespene into the cluster with the closest centroid
+    // resources = GetUnits(neutral, IsUnits(geysreTypes and mineralTypes))
+    auto resources = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(mineralTypes));
+    // for i=0; i<3; i++
+    for (auto i = 0;  i < 3;  ++i)
+    {   // Initialize clusters
+        // vector<pair<Point2D, vector<Unit>>> clusters = {};
+        std::vector<std::pair<Point2D, std::vector<const Unit*>>> clusters = {};
+        // for each centroid in centroids
+        for (auto &centroid : centroids)
+        {   // vector<Unit> bucket = {};
+            std::vector<const Unit*> bucket = {};
+            // clusters.push(make_pair(centroid, bucket))
+            clusters.push_back(std::make_pair(centroid, bucket));
+        }
+
+        // Cluster minerals and vespene
+        // for resource in resources
+        for (auto &resource : resources)
+        {   // cluster_i = 0
+            auto cluster_i = 0;
+            // minDist = Distance2D(clusters[0].first, resource.pos)
+            auto minDist = Distance2D(clusters[0].first, resource->pos);
+            // for j = 1; j < clusters.size; j++
+            for (auto j = 1;  j < clusters.size();  ++j)
+            {   // dist = Distance2D(clusters[j].first, resource.pos)
+                auto dist = Distance2D(clusters[j].first, resource->pos);
+                // if dist < minDist
+                if (dist < minDist)
+                {   // minDist = dist
+                    minDist = dist;
+                    // cluster_i = j
+                    cluster_i = j;
+                }
+            }
+            // clusters[cluster_i].second.push(resource)
+            clusters[cluster_i].second.push_back(resource);
+        }
+        
+        // On the 3rd pass, sort the centroids based on how suitable of a position they are for building a base
+        // if i == 2
+        if (i == 2)
+        {   // sort(clusters.begin(), clusters.end(), [](pair<Point2D, vector<Unit>> cluster1, pair<Point2D, vector<Unit>> cluster2){
+            std::sort(clusters.begin(), clusters.end(), [&observation](std::pair<Point2D, std::vector<const Unit*>> cluster1, std::pair<Point2D, std::vector<const Unit*>> cluster2)
+            {   // c1Score = 0
+                auto c1Score = 0;
+                // c2Score = 0
+                auto c2Score = 0;
+                // for resource in cluster1.second
+                for (auto &resource : cluster1.second)
+                {   // switch resource.unit_type
+                    switch (resource->unit_type.ToType())
+                    {   // case: richVespene
+                        case UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER:    // Intentionally falls through
+                        // case: richMinerals
+                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD:     // Intentionally falls through
+                        // case: otherRichMinerals
+                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750:      // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD:     // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750:
+                            // c1Score += 2
+                            c1Score += 2;
+                            // break;
+                            break;
+                        // default:
+                        default:
+                            // c1Score++
+                            c1Score++;
+                            // break;
+                            break;
+                    }
+                }
+                // for resource in cluster2.second
+                //     switch resource.unit_type
+                //         case: richVespene
+                //         case: richMinerals
+                //         case: otherRichMinerals
+                //             c2Score += 2
+                //             break;
+                //         default:
+                //             c2Score++
+                //             break;
+                for (auto &resource : cluster2.second)
+                {   // switch resource.unit_type
+                    switch (resource->unit_type.ToType())
+                    {
+                        case UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER:    // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD:     // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750:  // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD:     // Intentionally falls through
+                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750:
+                            c2Score += 2;
+                            break;
+                        default:
+                            c2Score++;
+                            break;
+                    }
+                }
+                // basePos = GetUnits(allianc::self, Hatchery)[0].pos
+                auto basePos = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY))[0]->pos;
+                // c1Score /= Distance2D(cluster1.first, basePos)
+                c1Score /= Distance2D(cluster1.first, basePos);
+                // c2Score /= Distance2D(cluster2.first, basePos)
+                c2Score /= Distance2D(cluster2.first, basePos);
+
+                // return c1Score > c2Score
+                return c1Score > c2Score;
+            // });
+            });
+            // for j = 0; j < centroids.size; j++
+            //     {centroids[j] = clusters[j].first}
+            // break;
+            for (auto j = 0;  j < centroids.size();  ++j)
+            {
+                centroids[j] = clusters[j].first;
+            }
+            break;
+        }
+        
+        // before the 3rd pass, recalculate the centroids so that they are in the center of the cluster, rather than where the vespene is
+        // for j = 0; j < centroids.size; j++
+        //     clusterSize = clusters[j].second.size
+        //     Point2D newCentroid
+        //     for resource in clusters[j].second
+        //         newCentroid += resource.pos
+        //     newCentroid /= clusterSize
+        //     centroids[j] = newCentroid
+        for (auto j = 0;  j < centroids.size();  ++j)
+        {
+            auto clusterSize = clusters[j].second.size();
+            Point2D newCentroid;
+            for (auto &resource : clusters[j].second)
+            {
+                newCentroid += resource->pos;
+            }
+            newCentroid /= clusterSize;
+            centroids[j] = newCentroid;
+        }
+    }
+
+    // return centroids
+    return centroids;
 }
 
 
