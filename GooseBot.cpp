@@ -14,7 +14,7 @@ using namespace sc2;
 
 void GooseBot::OnGameStart() { 
     const ObservationInterface* observation = Observation();
-
+    army.reserve(100);
     return; 
 }
 
@@ -77,15 +77,7 @@ void GooseBot::OnStep() {
         return;
     }
 
-    if (EnemyLocated) {
-        Attack();
-        return;
-    }
-
-    //if (ArmyReady() && EnemyLocated()) {
-     //   Attack();      //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
-     //   return;
-    //}   
+   
 }
 
 
