@@ -45,16 +45,6 @@ bool GooseBot::ArmyReady() {
     return true;
 }
 
-//experimental function to see if we can attack without seeing the enemy
-void GooseBot::Attack() { 
-    Units army = getArmy();
-    Point2D enemy_base = getEnemyLocation();
-    //if (ArmyReady()) {
-    if (true) {
-        Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base);
-    }
-
-}
 
 void GooseBot::OnUnitEnterVision(const Unit* unit) {
     const ObservationInterface* observation = Observation();
@@ -85,13 +75,13 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
 
-            if (ArmyReady()) {
-                Actions()->UnitCommand(attack_army, ABILITY_ID::ATTACK, unit);
-            }
+
 
             enemy_base = unit->pos;
             EnemyLocated = true;
-
+            if (ArmyReady()) {
+                Actions()->UnitCommand(attack_army, ABILITY_ID::ATTACK, enemy_base);
+            }
             break;
         default:
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
