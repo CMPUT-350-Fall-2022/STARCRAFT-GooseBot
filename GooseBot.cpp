@@ -14,7 +14,8 @@ using namespace sc2;
 
 void GooseBot::OnGameStart()
 { 
-    possibleBaseGrounds = FindBaseBuildingGrounds(); 
+    possibleBaseGrounds = FindBaseBuildingGrounds();
+    enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
     army.reserve(100);
     return; 
@@ -88,9 +89,11 @@ void GooseBot::OnStep() {
     bool morphedHatchery;
     while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot)))
     {
-        if (!(spotIndex < possibleBaseGrounds.size() - 1)) { 
-            break; }
-        if (breakCounter >= 5)
+        if (!(spotIndex < possibleBaseGrounds.size() - 1))
+        { 
+            break;
+        }
+        if (breakCounter >= 20)
         {
             spotIndex++;
             buildSpot = possibleBaseGrounds[spotIndex];
@@ -98,7 +101,7 @@ void GooseBot::OnStep() {
         }
         else
         {
-            buildSpot += Point2D(GetRandomScalar() * 5, GetRandomScalar() * 5);
+            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
             breakCounter++;
         }
     }
@@ -180,7 +183,31 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case overl:
     {
-        scout(unit);
+        std::_Vector_iterator<std::_Vector_val<std::_Simple_types<std::pair<int, const sc2::Unit *>>>> scoutIt;
+        if ((scoutIt = std::find_if(suicideScouts.begin(), suicideScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != suicideScouts.end())
+        {
+            scoutPoint(unit, enemyStartLocations[((*scoutIt).first)++ % enemyStartLocations.size()]);
+            break;
+        } else if (suicideScouts.size() < 2)
+        {
+            auto scout = std::make_pair(GetRandomInteger(0, enemyStartLocations.size() - 1), unit);
+            suicideScouts.push_back(scout);
+            scoutPoint(unit, enemyStartLocations[scout.first]);
+            break;
+        }
+
+        if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+        {
+            scoutPoint(unit, possibleBaseGrounds[((*scoutIt).first)++ % possibleBaseGrounds.size()]);
+        } else if (generalScouts.size() < 4)
+        {
+            auto scout = std::make_pair(GetRandomInteger(0, possibleBaseGrounds.size() - 1), unit);
+            generalScouts.push_back(scout);
+            scoutPoint(unit, possibleBaseGrounds[scout.first]);
+        } else
+        {
+            Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, possibleBaseGrounds[0]);   // TODO: Make non-scouting overlords more useful than this, which just makes them pace back and forth over the base.
+        }
         break;
     }
 
@@ -205,7 +232,6 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         if (banel_count < zergl_count) {
             Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
-
         }
     }
 
@@ -216,9 +242,24 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         army.push_back(unit);
         break;
     }
-        
         default:
             break;
+    }
+}
+
+
+void GooseBot::OnUnitDestroyed(const Unit* unit)
+{
+    switch (unit->unit_type.ToType())
+    {
+        case overl:
+        {
+            std::_Vector_iterator<std::_Vector_val<std::_Simple_types<std::pair<int, const sc2::Unit *>>>> scoutIt;
+            if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+            {
+                generalScouts.erase(scoutIt);
+            }
+        }
     }
 }
 
@@ -226,9 +267,12 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 // Very simple for now.
 void GooseBot::scout(const Unit* unit)
 {
-    const GameInfo& game_info = Observation()->GetGameInfo();
-    auto enemyStartLocations = game_info.enemy_start_locations;
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, /*possibleBaseGrounds[0]*/GetRandomEntry(enemyStartLocations));
+}
+
+void GooseBot::scoutPoint(const Unit* unit, Point2D point)
+{
+    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_MOVE, point);
 }
 
 

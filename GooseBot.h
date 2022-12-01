@@ -22,6 +22,7 @@ class GooseBot : public sc2::Agent {
         virtual void OnGameStart();
         virtual void OnStep();
         virtual void OnUnitIdle(const Unit* unit) final;
+        virtual void OnUnitDestroyed(const Unit* unit) final;
         virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
 
@@ -43,6 +44,7 @@ class GooseBot : public sc2::Agent {
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
+        void scoutPoint(const Unit* unit, Point2D point);
 	    
        
         //bool EnemyLocated();
@@ -92,11 +94,16 @@ class GooseBot : public sc2::Agent {
 
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
         std::vector<Point2D> possibleBaseGrounds;
+        std::vector<Point2D> enemyStartLocations;
 
 
         Units army;
         Point2D enemy_base;
         bool EnemyLocated = false;
+
+
+        std::vector<std::pair<int, const Unit*>> generalScouts = {};
+        std::vector<std::pair<int, const Unit*>> suicideScouts = {};
 
 };
 #endif
