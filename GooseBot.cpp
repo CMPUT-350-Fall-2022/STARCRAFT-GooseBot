@@ -81,13 +81,6 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
-    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
-        std::cout << "Researched" << std::endl;
-        return;
-    }
-    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
-        return;
-    }
 
     int spotIndex = 0;
     Point2D buildSpot = possibleBaseGrounds[spotIndex];
