@@ -80,9 +80,7 @@ void GooseBot::OnStep() {
         return;
     }
 
-    if (ArmyReady() && EnemyLocated()) {
-        Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
-    }   
+ 
 }
 
 
@@ -358,7 +356,28 @@ void GooseBot::VerifyPhase(){
     }
     phase = i;
 }
+
+bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade) {
+    if (actionPending(ability)
+        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())) {
+        return false;
+    }
+    const Unit* researcher = FindUnit(researcher_type);
+    if (researcher != nullptr && CanAfford(upgrade)) {
+        Actions()->UnitCommand(researcher, ability);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+Units GooseBot::getArmy() { return army; }
+
+Point2D GooseBot::getEnemyLocation() { return enemy_base; }
+
 // EFFECT_INJECTLARVA target hatchery/lair
 // MORPH_LAIR no target
 
 // MORPH_OVERLORDTRANSPORT no target
+// BUFF_ID QUEENSPAWNLARVATIMER
