@@ -65,8 +65,8 @@ bool GooseBot::TryMorphExtractor() {
 	
 	size_t base_count = countUnitType(UNIT_TYPEID::ZERG_HATCHERY)
 		+ countUnitType(UNIT_TYPEID::ZERG_LAIR) + countUnitType(UNIT_TYPEID::ZERG_HIVE);
-	const Unit * base = GetNewerBase();
-	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+	const Unit* base = GetNewerBase();
+	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
 	if ((base == nullptr) 
 		|| (countUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*base_count)
 		|| (actionPending(ABILITY_ID::BUILD_EXTRACTOR))
