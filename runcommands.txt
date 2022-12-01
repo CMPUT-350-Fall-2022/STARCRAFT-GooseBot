@@ -1,1 +1,3 @@
 GooseBot.exe -c -a terran -d Hard -m CactusValleyLE.SC2Map
+GooseBot.exe -c -a terran -d medium -m CactusValleyLE.SC2Map
+GooseBot.exe -c -a terran -d easy -m CactusValleyLE.SC2Map

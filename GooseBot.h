@@ -21,13 +21,14 @@ class GooseBot : public sc2::Agent {
 
         virtual void OnGameStart();
         virtual void OnStep();
-        virtual void OnUnitIdle(const sc2::Unit* unit) final;
+        virtual void OnUnitIdle(const Unit* unit) final;
+        virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
-        bool TryBuildSpawningPool();
+ 
         bool TryBirthQueen();
         bool TryMorphLair();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
@@ -42,10 +43,6 @@ class GooseBot : public sc2::Agent {
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
 	    void scout(const Unit* unit);
-	    
-        bool ArmyReady();
-        bool EnemyLocated();
-        bool Attack();
 
         void VerifyPhase();
         void CountBases();
@@ -58,6 +55,9 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+
+        Point2D GooseBot::getEnemyLocation();
+        Units GooseBot::getArmy();
 
     private:
         size_t num_bases;
@@ -72,11 +72,15 @@ class GooseBot : public sc2::Agent {
 
         std::vector<UPGRADE_ID> upgraded;
 
-        size_t phase = 0;
-
+        size_t phase = 0;  
+      
         // 3rd set dummies for moment
         const UnitList targetStruct = {UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BROODLORD};
         const std::array<ABILITY_ID, END> abilities = {ABILITY_ID::BUILD_SPAWNINGPOOL, ABILITY_ID::BUILD_ROACHWARREN, ABILITY_ID::TEMPLEDOORDOWN};
+
+        Units army;
+        Point2D enemy_base;
+        bool EnemyLocated = false;
 
 };
 #endif

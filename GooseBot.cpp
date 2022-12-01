@@ -13,6 +13,8 @@
 using namespace sc2;
 
 void GooseBot::OnGameStart() { 
+    const ObservationInterface* observation = Observation();
+    army.reserve(100);
     return; 
 }
 
@@ -77,25 +79,8 @@ void GooseBot::OnStep() {
     if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
         return;
     }
-    // TODO: Change to get scouted point from ideal location for new base ///
-    const GameInfo& game_info = Observation()->GetGameInfo();
-    auto enemyStartLocations = game_info.enemy_start_locations;
-    Point2D demo_point = Point2D(0, 0);
-    if (enemyStartLocations.empty() == false) { 
-      
-        demo_point = enemyStartLocations.back();
-        
-    }
 
-    if (TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, demo_point)) {
-        return;
-    }
-    /////////////////////////////////////////////////////////////////////////
-
-
-    if (ArmyReady() && EnemyLocated()) {
-        Attack();       //TODO: Does this thing need a return after it like everything else? also, with all these returns, will the stuff towards the bottom actually be reachable?
-    }   
+ 
 }
 
 
@@ -113,62 +98,66 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     switch (unit->unit_type.ToType())
     {
         //case UNIT_TYPEID::ZERG_LARVA:
-        case larva:
-        {
-            //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
-            if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
-            {   //if our total number of workers is less than 30
-                if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
-                {   //build a worker
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-                    break;
-                }
-
-                //if our zergling count is less than or equal to 10
-                if (zergl_count <= 10)
-                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (roach_count <= 5)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (mutal_count < zergl_count)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-                    break;
-                }
-                //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
-            }
-            
-            //spawns overlord to increase supply cap when we have only one available opening
-            if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < 3)
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
-            }
-            break;
-        }
-
-		case drone:
-        {
-            const Unit * mineral_target = FindNearestMineralPatch(unit->pos);
-            if (!mineral_target)
-            {
+    case larva:
+    {
+        //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
+        if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
+        {   //if our total number of workers is less than 30
+            if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
+            {   //build a worker
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
-            Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
-            break;
+
+            //if our zergling count is less than or equal to 10
+            if (zergl_count <= 10)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
+            }
+
+            if (roach_count <= 5)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+
+
+                break;
+            }
+
+            if (mutal_count < zergl_count)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+
+
+                break;
+            }
+            //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
         }
 
-        case overl:
+        //spawns overlord to increase supply cap when we have only one available opening
+        //if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
         {
-            scout(unit);
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+        }
+        break;
+    }
+
+    case drone:
+    {
+        const Unit* mineral_target = FindNearestMineralPatch(unit->pos);
+        if (!mineral_target)
+        {
             break;
         }
+        Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+        break;
+    }
+
+    case overl:
+    {
+        scout(unit);
+        break;
+    }
 
         case queen:
         {
@@ -183,13 +172,21 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             break;
         }
 
-        case zergl:
-        {
-            if (banel_count < zergl_count) {
-                    Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
-                    break;
-                }
+    case zergl:
+    {
+        if (banel_count < zergl_count) {
+            Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
+
         }
+    }
+
+    case banel:
+    case mutal:
+    case roach: 
+    {
+        army.push_back(unit);
+        break;
+    }
         
         default:
             break;
@@ -294,16 +291,25 @@ bool GooseBot::TryBirthQueen(){
 
 bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade){
     if (actionPending(ability)
-        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())){
+        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())) {
         return false;
     }
     const Unit* researcher = FindUnit(researcher_type);
-    if (researcher != nullptr && CanAfford(upgrade)){
+    if (researcher != nullptr && CanAfford(upgrade)) {
         Actions()->UnitCommand(researcher, ability);
         return true;
-    }else{
+    }
+    else {
         return false;
     }
 }
 
+Units GooseBot::getArmy() { return army; }
+
+Point2D GooseBot::getEnemyLocation() { return enemy_base; }
+
+// EFFECT_INJECTLARVA target hatchery/lair
+// MORPH_LAIR no target
+
 // MORPH_OVERLORDTRANSPORT no target
+// BUFF_ID QUEENSPAWNLARVATIMER

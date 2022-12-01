@@ -16,7 +16,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Po
 		Actions()->UnitCommand(unit, ability_type_for_structure, location_point);
 		return true;
 	}
-	
+	return false;
 }
 
 /// <summary>
