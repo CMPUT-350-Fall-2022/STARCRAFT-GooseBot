@@ -59,12 +59,9 @@ class GooseBot : public sc2::Agent {
 
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
+        void SetSavingsFalse();
 	    void scout(const Unit* unit);
         void scoutPoint(const Unit* unit, Point2D point);
-	    
-       
-        //bool EnemyLocated();
-   
 
         bool BuildPhase();
         void CountBases();
@@ -78,6 +75,7 @@ class GooseBot : public sc2::Agent {
 
         void VerifyPending();
         void VerifyArmy();
+        void VerifyBuild();
         void Prioritize();
 
         // Return true if two units are within a certain distance of each other
@@ -88,6 +86,7 @@ class GooseBot : public sc2::Agent {
         const Units FindAllMineralPatches();
         const Unit* FindNearestMineralPatch(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
+        const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
 
@@ -98,19 +97,27 @@ class GooseBot : public sc2::Agent {
 
     private:
         size_t num_bases;
-        size_t drone_cap;
+        size_t num_desired_bases;
+        size_t num_desired_extractors;
+
+        // Initial
+        size_t drone_cap = 14;
         size_t queen_cap;
-        size_t overlord_cap = 2;
+        size_t overlord_cap = 1;
 
         std::unordered_set<ABILITY_ID> pendingOrders;
 
         std::vector<UPGRADE_ID> upgraded;
 
-        size_t build_phase;
+        size_t build_phase = 1;
         bool saving_for_building; 
-        size_t army_phase;
+        std::vector<UNIT_TYPEID> built_types;
+
+        size_t army_phase = 1;
         bool saving_for_army;
+
         size_t research_phase;
+        bool saving_for_research;
       
         UNIT_TYPEID target_struct;
         ABILITY_ID builder_ability;
@@ -121,6 +128,8 @@ class GooseBot : public sc2::Agent {
         const std::vector<UNIT_TYPEID> vespeneTypes = { UNIT_TYPEID::NATURALGAS, UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER, UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER };
         const std::vector<UNIT_TYPEID> mineralTypes = { UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD, UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750, UNIT_TYPEID::NEUTRAL_MINERALFIELD, UNIT_TYPEID::NEUTRAL_MINERALFIELD450, UNIT_TYPEID::NEUTRAL_MINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 };
         const std::vector<UNIT_TYPEID> townHallTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::PROTOSS_NEXUS, UNIT_TYPEID::TERRAN_COMMANDCENTER };
+        const std::vector<UNIT_TYPEID> baseTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::ZERG_LAIR, UNIT_TYPEID::ZERG_HIVE };
+
 
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
         std::vector<Point2D> possibleBaseGrounds;
@@ -135,6 +144,31 @@ class GooseBot : public sc2::Agent {
 
         std::vector<std::pair<int, const Unit*>> generalScouts = {};
         std::vector<std::pair<int, const Unit*>> suicideScouts = {};
+
+        using BuildPair = std::pair<UNIT_TYPEID, ABILITY_ID>;
+        const std::vector<BuildPair> struct_targets = { 
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
+            BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
+            BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
+            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
+            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
+            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
+            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 8
+            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 9
+            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 10
+        
+        const std::vector<UNIT_TYPEID> struct_units = {
+            UNIT_TYPEID::ZERG_HATCHERY,
+            UNIT_TYPEID::ZERG_SPAWNINGPOOL,
+            UNIT_TYPEID::ZERG_HATCHERY, 
+            UNIT_TYPEID::ZERG_ROACHWARREN, 
+            UNIT_TYPEID::ZERG_BANELINGNEST, 
+            UNIT_TYPEID::ZERG_LAIR, 
+            UNIT_TYPEID::ZERG_SPIRE, 
+            UNIT_TYPEID::ZERG_INFESTATIONPIT, 
+            UNIT_TYPEID::ZERG_HIVE, 
+            UNIT_TYPEID::ZERG_ULTRALISKCAVERN} ;
 
 };
 #endif

@@ -1,39 +1,59 @@
 #include "GooseBot.h"
+                 
+void GooseBot::VerifyBuild(){
+    Units built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
+    built_types.clear();
+    for (auto s : built_structs){
+        built_types.push_back(s->unit_type);
+    }
+    build_phase = built_types.size();
+}
 
 // Assumes up-to-date num_bases
 bool GooseBot::BuildPhase(){
-    build_phase = 0;
-
-    if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_SPAWNINGPOOL, UNIT_TYPEID::ZERG_SPAWNINGPOOL);
-    }else{++build_phase;}
-    if (num_bases < 2){
-        return TryBuildHatchery();
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_ROACHWARREN) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_ROACHWARREN, UNIT_TYPEID::ZERG_ROACHWARREN);
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_BANELINGNEST) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST);
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 0){
-        return TryMorphLair();
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_SPIRE) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_SPIRE, UNIT_TYPEID::ZERG_SPIRE);
-    }else{++build_phase;}
-    if (num_bases < 3){
-        return TryBuildHatchery();
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_INFESTATIONPIT) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_INFESTATIONPIT, UNIT_TYPEID::ZERG_INFESTATIONPIT);
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_HIVE) == 0){
-        return TryMorphHive();
-    }else{++build_phase;}
-    if (CountUnitType(UNIT_TYPEID::ZERG_ULTRALISKCAVERN) == 0){
-        return TryBuildStructure(ABILITY_ID::BUILD_ULTRALISKCAVERN, UNIT_TYPEID::ZERG_ULTRALISKCAVERN);
-    }else{return false;}
+    // OnUnitCreated could be keeping this updated?
+    // but for now / in case of structural destruction or other mishap
+    VerifyBuild();
+    // Find the next item to build by iterating over desired structures,
+    // setting the structure as next to build if we do not have it (or enough of it)
+    auto to_build = struct_targets.end();
+    for (auto it = struct_targets.begin(); it < struct_targets.end(); ++it){
+        auto found = std::find(built_types.begin(), built_types.end(), (*it).first);
+        if (found == built_types.end()){
+            to_build = it;
+            if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+                //only build new hatchery on proper phase or if bases count too low for higher phases
+                if (build_phase == 4 || (build_phase > 4 && num_bases < 3)){
+                    break;
+                }else{
+                    continue;
+                }
+            }else{
+                break;
+            }
+        }
+    }// Build next structure based on its custom build function, if it has one
+    for (size_t j = 0; j < struct_targets.size(); ++j){
+        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
+            std::cout << "Trying to build Extractor" << std::endl;
+            return TryMorphExtractor();
+        }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+            std::cout << "Trying to build Hatchery" << std::endl;
+            return TryBuildHatchery();
+        }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
+            std::cout << "Trying to morph Lair" << std::endl;
+            return TryMorphLair();
+        }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_HIVE){
+            return TryMorphHive();
+        }
+        else {
+            std::cout << "Trying to build generic building" << std::endl;
+            return TryBuildStructure((*to_build).second, (*to_build).first);
+        }
+    }
 }
 
 //Check if can afford upgrade
@@ -93,14 +113,9 @@ const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
 
 // Assumes up-to-date num_bases
 void GooseBot::SetDroneCap(){
-    drone_cap = 0;
-    Units extractors = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_EXTRACTOR));
-    for (auto e : extractors){
-        if (e->vespene_contents > 0){
-            drone_cap += 3;
-        }
+    if (drone_cap < 14*num_bases){
+        drone_cap += 3;
     }
-    drone_cap += (14*num_bases);
 }
 
 // Assumes up-to-date num_bases
@@ -122,12 +137,22 @@ void GooseBot::SetOverlordCap(){
     }
 }
 
-//TODO, make actually do its job 
+//TODO, finish making this actually do its job 
 void GooseBot::Prioritize(){
+    if (build_phase <= army_phase){
+        SetSavingsFalse();
+        saving_for_building = true;
+    }
+    else if (build_phase > army_phase){
+        SetSavingsFalse();
+        saving_for_army = true;
+    }
+}
 
+void GooseBot::SetSavingsFalse(){
     saving_for_army = false;
-    saving_for_building = true;
-    
+    saving_for_building = false;
+    saving_for_research = false;
 }
 
 

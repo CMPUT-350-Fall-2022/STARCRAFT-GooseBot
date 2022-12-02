@@ -1,17 +1,5 @@
 #include "GooseBot.h"
 
-#define larva UNIT_TYPEID::ZERG_LARVA
-#define drone UNIT_TYPEID::ZERG_DRONE
-#define zergl UNIT_TYPEID::ZERG_ZERGLING
-#define banel UNIT_TYPEID::ZERG_BANELING
-#define overl UNIT_TYPEID::ZERG_OVERLORD
-#define queen UNIT_TYPEID::ZERG_QUEEN
-#define roach UNIT_TYPEID::ZERG_ROACH
-#define mutal UNIT_TYPEID::ZERG_MUTALISK
-
-
-using namespace sc2;
-
 void GooseBot::OnGameStart()
 { 
     possibleBaseGrounds = FindBaseBuildingGrounds();
@@ -59,53 +47,24 @@ void GooseBot::OnStep() {
     CountBases();
     Prioritize();
 
+    if (TryHarvestVespene()) {
+        std::cout << "Harvesting Vespene" << std::endl;
+        return;
+    }
     if (saving_for_building){
-        if (BuildPhase()){
-            std::cout << "Built structure for phase " << build_phase << std::endl;
-            return;
-        }        
+        std::cout << "Build Phase " << build_phase << std::endl;
+        BuildPhase();
+        return;        
     }
     if (saving_for_army){ 
+        std::cout << "Army Phase " << army_phase << std::endl;
         if (ArmyPhase()){
-            std::cout << "Progressing in army phase " << army_phase << std::endl;
-            return;
+            ++army_phase;
         }
+        return;
     }
     if (ResearchPhase()){
-        return;
-    }
-    if (TryMorphExtractor()) {
-        std::cout << "Morphed Extractor" << std::endl;
-        return;
-    }
-    if (TryHarvestVespene()) {
-        return;
-    }
-
-    int spotIndex = 0;
-    Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    int breakCounter = 0;
-    bool morphedHatchery;
-    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot)))
-    {
-        if (!(spotIndex < possibleBaseGrounds.size() - 1))
-        { 
-            break;
-        }
-        if (breakCounter >= 20)
-        {
-            spotIndex++;
-            buildSpot = possibleBaseGrounds[spotIndex];
-            breakCounter = 0;
-        }
-        else
-        {
-            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-            breakCounter++;
-        }
-    }
-    if (morphedHatchery)
-    {
+        std::cout << "Research Phase " << std::endl;
         return;
     } 
 }
@@ -135,31 +94,32 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
-            if (saving_for_army){
                 //if our zergling count is less than or equal to 10
-                if (zergl_count <= 10)
-                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (roach_count <= 5)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
-
-                if (mutal_count < zergl_count)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-                    break;
-                }
+            if (build_phase < 4 || zergl_count <= 10)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
             }
+
+            if (roach_count <= 5)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
+            }
+
+            if (mutal_count < zergl_count)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                break;
+            }
+            
             //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
         }
 
         //spawns overlord to increase supply cap when we need supply increase
-        if (CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlord_cap)
+        SetOverlordCap();
+        VerifyPending();
+        if (CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlord_cap && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
@@ -209,14 +169,14 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case queen:
     {
-        const Unit* hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
+        const Unit* base = FindNearestAllied(baseTypes, unit->pos);
         //iterator pointing to buff if found, end if not found
-        if (hatchery)
+        if (base)
         {
-            auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
-            if (hasInjection == hatchery->buffs.end())
+            auto hasInjection = std::find(base->buffs.begin(), base->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
+            if (hasInjection == base->buffs.end())
             {     //if no injection
-                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, base);
             }else{
                 TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, 10);
             }
@@ -242,7 +202,6 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             break;
     }
 }
-
 
 void GooseBot::OnUnitDestroyed(const Unit* unit)
 {
@@ -429,6 +388,25 @@ const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& 
     {
 
         if (u->unit_type == target_unit)
+        {
+            float d = DistanceSquared2D(u->pos, start);
+            if (d < distance)
+            {
+                distance = d;
+                target = u;
+            }
+        }
+    }
+    return target;
+}
+
+const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start) {
+    Units units = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(target_units));
+    float distance = std::numeric_limits<float>::max();
+    const Unit* target = nullptr;
+    for (const auto& u : units)
+    {
+        if (std::find(target_units.begin(), target_units.end(), u->unit_type) != target_units.end())
         {
             float d = DistanceSquared2D(u->pos, start);
             if (d < distance)

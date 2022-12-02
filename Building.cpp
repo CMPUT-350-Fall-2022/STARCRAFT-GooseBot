@@ -33,7 +33,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	const Unit * worker = FindUnit(worker_unit);
 	//if we have no workers, return false
 	if (worker == nullptr) {
-		std::cout << "fails available worker check ,";
+		std::cout << "fails available worker check ";
 		return false;
 	}
 	// Get target to morph; note that target and worker can be the same, 
@@ -42,18 +42,18 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 	const Unit* target = observation->GetUnit(location_tag);
 	if ((worker->tag != location_tag) && (target->unit_type == worker_unit)){
 		Actions()->UnitCommand(target, ability_type_for_structure);
-		std::cout << "target self targeted";
+		std::cout << "target self targeted ";
 		return true;
 	}else if (worker->tag == location_tag){		//self-targeting
 		Actions()->UnitCommand(worker, ability_type_for_structure);
-		std::cout << "worker self targeted";
+		std::cout << "worker self targeted ";
 		return true;
 	}// Otherwise, builder unit different than target unit
 	
 	// Check to see if worker can morph at target location
 	if (Query()->Placement(ability_type_for_structure, target->pos)) {
 		Actions()->UnitCommand(worker, ability_type_for_structure, target);
-		std::cout << "worker targeted non-worker";
+		std::cout << "worker targeted non-worker ";
 		return true;
 	}
 	std::cout << "failing to catch success condition ,";
@@ -103,7 +103,8 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 	// If a unit already is building a supply structure of this type, do nothing.
 	// OR If we have the number of these we want already, do nothing
 	// OR If we can't afford it, do nothing
-	if (actionPending(ability_type_for_structure) || (CountUnitType(struct_type) >= struct_cap) || !CanAfford(struct_type)){
+	if (actionPending(ability_type_for_structure) || CountUnitType(struct_type) == struct_cap || !CanAfford(struct_type)){
+		std::cout << "failed pre-build checks" << std::endl;
 		return false;
 	}
 	// Otherwise, build
@@ -120,39 +121,59 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 		return true;
 	}
     // Query failed
+	std::cout << "failed placement query" << std::endl;
     return false;
 }
 
-
 bool GooseBot::TryBuildHatchery() {
-	const Unit* unit_to_build = FindUnit(drone);
-	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
-		|| !CanAfford(UNIT_TYPEID::ZERG_HATCHERY)
-		|| (unit_to_build == nullptr)){
-		return false;
-	}
+	// const Unit* unit_to_build = FindUnit(drone);
+	// if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
+	// 	|| !CanAfford(UNIT_TYPEID::ZERG_HATCHERY)
+	// 	|| (unit_to_build == nullptr)){
+	// 	return false;
+	// }
 
-	// Try to build at a position in a random direction from 
-	// base location
-	const Unit* base = GetMainBase();
-	float rx = GetRandomScalar();
-	float ry = GetRandomScalar();
-	Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
-	if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
-			// Check to see if worker can morph at target location
-		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
-			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
-			return true;
-		}else {return false;}
-	}
-    // Query failed
-    return false;
+	// // Try to build at a position in a random direction from 
+	// // base location
+	// const Unit* base = GetMainBase();
+	// float rx = GetRandomScalar();
+	// float ry = GetRandomScalar();
+	// Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
+	// if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
+	// 		// Check to see if worker can morph at target location
+	// 	if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
+	// 		Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
+	// 		return true;
+	// 	}else {return false;}
+	// }
+    // // Query failed
+    // return false;
+
+	int spotIndex = 0;
+    Point2D buildSpot = possibleBaseGrounds[spotIndex];
+    int breakCounter = 0;
+    bool morphedHatchery;
+    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
+        if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
+            break;
+        }
+        if (breakCounter >= 20){
+            spotIndex++;
+            buildSpot = possibleBaseGrounds[spotIndex];
+            breakCounter = 0;
+        }
+        else{
+            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
+            breakCounter++;
+        }
+    }
+	return morphedHatchery;
 }
 
 //try to morph hatchery into lair
 bool GooseBot::TryMorphLair() {
 	const Unit *base = GetMainBase();
-	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) 
+	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) || CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 1 
 		|| actionPending(ABILITY_ID::MORPH_LAIR) || (base->unit_type != UNIT_TYPEID::ZERG_HATCHERY)) {
 		return false;
 	}

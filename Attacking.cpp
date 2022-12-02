@@ -64,8 +64,6 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
 
-
-
             enemy_base = unit->pos;
             EnemyLocated = true;
             if (ArmyReady()) {
@@ -74,7 +72,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             break;
         default:
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
-            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             //std::cout << "enemy unit check fail" << std::endl;
 
             break;
@@ -86,32 +84,23 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 bool GooseBot::ArmyPhase(){
     SetDroneCap();
     SetQueenCap();
-    SetOverlordCap();
 
+    // Handle base units
     if (TryBirthQueen()){
-        return true;
-    }
+        std::cout << "Birthed Queen" << std::endl;
+        return true;       }
+
+    // Handle attack units
     VerifyArmy();
-    if (army.size() >= army_cap && EnemyLocated){
-        Actions()->UnitCommand(army, ABILITY_ID::SMART, enemy_base);
-            return true;
+    // send half to attack
+    if (army.size() >= army_cap*2 && EnemyLocated){
+        Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
+        return true;
     }
     return false;
 }
 
 void GooseBot::VerifyArmy(){
-    army.clear();
-    const ObservationInterface* observation = Observation();
-    Units Z = observation->GetUnits(Unit::Alliance::Self, IsUnit(zergl));
-    for (auto z : Z){
-        army.push_back(z);
-    }
-    Units R = observation->GetUnits(Unit::Alliance::Self, IsUnit(roach));
-    for (auto r : R){
-        army.push_back(r);
-    }
-    Units B = observation->GetUnits(Unit::Alliance::Self, IsUnit(banel));
-    for (auto b : B){
-        army.push_back(b);
-    }
+    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel};
+    army = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
 }
