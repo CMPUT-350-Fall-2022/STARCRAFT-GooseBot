@@ -534,6 +534,7 @@ bool GooseBot::CanAfford(UNIT_TYPEID unit){
                     || (data.tech_requirement == UNIT_TYPEID::INVALID) ){
                     return true;
                 }
+                return false;
             }else{
                 return false;
             }
