@@ -117,14 +117,18 @@ void GooseBot::VerifyArmyFocus(){
         zergl_cap = 30;
         roach_cap = 0;
         mutal_cap = 0;
+        banel_cap = 0;
+
     }else if (build_phase >= 4 && build_phase <= 6){
         zergl_cap = 30;
         roach_cap = 30;
         mutal_cap = 0;
+        banel_cap = 30;
     }else if (build_phase >= 7 && build_phase < 10){
         zergl_cap = 30;
         roach_cap = 0;
         mutal_cap = 28;
+        banel_cap = 0;
     }
     army_cap = zergl_cap + roach_cap + mutal_cap + queen_cap;
 }

@@ -102,7 +102,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
             if (roach_count < roach_cap)
             {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
                 break;
             }
                 //if our zergling count is less than or equal to 10
@@ -112,22 +112,20 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
                 break;
             }
            
-            //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
-        }
-
-        //spawns overlord to increase supply cap when we need supply increase
-        SetOverlordCap();
-        VerifyPending();
-        if (CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlord_cap && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
-        {
-            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+        }else{
+            //spawns overlord to increase supply cap when we need supply increase
+            VerifyPending();
+            if (build_phase > 2 && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+            }
         }
         break;
     }
 
     case drone:
     {
-        const Unit* mineral_target = FindNearestMineralPatch(unit->pos);
+        const Unit* mineral_target = FindNearestMineralPatch(GetNewerBase()->pos);
         if (!mineral_target)
         {
             break;
@@ -185,18 +183,19 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case zergl:
     {
-        if (banel_count < zergl_count) {
+        if (banel_count < banel_cap) {
             Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
         }
     }
 
-    case banel:
-    case mutal:
-    case roach: 
-    {
-        army.push_back(unit);
-        break;
-    }
+    //I dont think we need this now that we have VerifyArmy
+    // case banel:
+    // case mutal:
+    // case roach: 
+    // {
+    //     army.push_back(unit);
+    //     break;
+    // }
         default:
             break;
     }

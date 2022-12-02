@@ -135,14 +135,6 @@ void GooseBot::SetQueenCap(){
     }
 }
 
-// Assumes up-to-date num_bases
-void GooseBot::SetOverlordCap(){
-    const ObservationInterface* observation = Observation();
-    if (observation->GetFoodUsed() >= observation->GetFoodCap() - 1){
-        ++overlord_cap;
-    }
-}
-
 //TODO, finish making this actually do its job 
 void GooseBot::Prioritize(){
     if (build_phase <= army_phase){

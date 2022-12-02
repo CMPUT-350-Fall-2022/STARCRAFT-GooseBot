@@ -69,7 +69,6 @@ class GooseBot : public sc2::Agent {
         void SetQueenCap();
 
         bool ArmyPhase();
-        void SetOverlordCap();
 
         bool ResearchPhase();
 
@@ -108,6 +107,7 @@ class GooseBot : public sc2::Agent {
         size_t zergl_cap;
         size_t roach_cap;
         size_t mutal_cap;
+        size_t banel_cap;
 
         std::unordered_set<ABILITY_ID> pendingOrders;
 
