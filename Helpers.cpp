@@ -1,12 +1,18 @@
 #include "GooseBot.h"
                  
 void GooseBot::VerifyBuild(){
+    build_phase = 0;
     Units built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
     built_types.clear();
     for (auto s : built_structs){
         built_types.push_back(s->unit_type);
+        if (s->unit_type == UNIT_TYPEID::ZERG_LAIR){
+            ++build_phase;
+        }else if (s->unit_type == UNIT_TYPEID::ZERG_HIVE){
+            build_phase += 2;
+        }
     }
-    build_phase = built_types.size();
+    build_phase += built_types.size();
 }
 
 // Assumes up-to-date num_bases

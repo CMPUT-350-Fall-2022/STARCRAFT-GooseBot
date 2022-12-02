@@ -75,6 +75,7 @@ class GooseBot : public sc2::Agent {
 
         void VerifyPending();
         void VerifyArmy();
+        void VerifyArmyFocus();
         void VerifyBuild();
         void Prioritize();
 
@@ -104,6 +105,9 @@ class GooseBot : public sc2::Agent {
         size_t drone_cap = 14;
         size_t queen_cap;
         size_t overlord_cap = 1;
+        size_t zergl_cap;
+        size_t roach_cap;
+        size_t mutal_cap;
 
         std::unordered_set<ABILITY_ID> pendingOrders;
 

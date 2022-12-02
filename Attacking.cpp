@@ -68,7 +68,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             enemy_base = unit->pos;
             EnemyLocated = true;
             if (ArmyReady()) {
-                Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+                //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             }
             break;
         }
@@ -92,19 +92,39 @@ bool GooseBot::ArmyPhase(){
     // Handle base units
     if (TryBirthQueen()){
         std::cout << "Birthed Queen" << std::endl;
-        return true;       }
+        return true; 
+    }
 
     // Handle attack units
     VerifyArmy();
+    VerifyArmyFocus();
     // send half to attack
-    if (army.size() >= army_cap*2 && EnemyLocated){
-        Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
+    if (army.size() >= army_cap && EnemyLocated){
+        //Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
         return true;
     }
     return false;
 }
 
 void GooseBot::VerifyArmy(){
+    army.clear();
     std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel};
     army = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+}
+
+void GooseBot::VerifyArmyFocus(){
+    if (build_phase < 4){
+        zergl_cap = 30;
+        roach_cap = 0;
+        mutal_cap = 0;
+    }else if (build_phase >= 4 && build_phase <= 6){
+        zergl_cap = 30;
+        roach_cap = 30;
+        mutal_cap = 0;
+    }else if (build_phase >= 7 && build_phase < 10){
+        zergl_cap = 30;
+        roach_cap = 0;
+        mutal_cap = 28;
+    }
+    army_cap = zergl_cap + roach_cap + mutal_cap + queen_cap;
 }

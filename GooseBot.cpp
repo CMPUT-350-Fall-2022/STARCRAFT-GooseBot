@@ -89,30 +89,29 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
         {   //if our total number of workers is less than 30
-            if ((drone_count <= drone_cap))     
+            if ((drone_count < drone_cap))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
-                //if our zergling count is less than or equal to 10
-            if (build_phase < 4 || zergl_count <= 10)
-            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                break;
-            }
-
-            if (roach_count <= 5)
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                break;
-            }
-
-            if (mutal_count < zergl_count)
+            if (mutal_count < mutal_cap)
             {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
                 break;
             }
-            
+
+            if (roach_count < roach_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
+            }
+                //if our zergling count is less than or equal to 10
+            if (zergl_count < zergl_cap)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
+            }
+           
             //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
         }
 
