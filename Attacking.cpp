@@ -73,6 +73,7 @@ void GooseBot::VerifyArmyFocus(){
         roach_cap = 30;
         mutal_cap = 0;
         banel_cap = 30;
+        
     }else if (build_phase >= 7 && build_phase < 10){
         zergl_cap = 30;
         roach_cap = 0;
