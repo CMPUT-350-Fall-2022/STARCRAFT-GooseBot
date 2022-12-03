@@ -141,6 +141,7 @@ class GooseBot : public sc2::Agent {
 
 
         Units army;
+        Units defense;
         size_t army_cap = 30;
         Point2D enemy_base;
         bool EnemyLocated = false;
