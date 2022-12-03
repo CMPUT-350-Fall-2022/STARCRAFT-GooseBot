@@ -24,6 +24,7 @@ using namespace sc2;
 #define queen UNIT_TYPEID::ZERG_QUEEN
 #define roach UNIT_TYPEID::ZERG_ROACH
 #define mutal UNIT_TYPEID::ZERG_MUTALISK
+#define ultra UNIT_TYPEID::ZERG_ULTRALISK
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
 #define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
 #define nexus UNIT_TYPEID::PROTOSS_NEXUS
@@ -145,6 +146,8 @@ class GooseBot : public sc2::Agent {
 
         Units army;
         Units defense;
+        Units melee;
+        size_t melee_cap = 20;
         size_t army_cap = 30;
         Point2D enemy_base;
         bool EnemyLocated = false;

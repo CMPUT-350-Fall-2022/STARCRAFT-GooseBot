@@ -57,14 +57,23 @@ bool GooseBot::ArmyPhase(){
 
 void GooseBot::VerifyArmy(){
     army.clear();
-    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel};
-    army = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+    melee.clear();
+
+    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel, ultra};
+
+    Units temp = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+    if (!temp.empty()) {
+        size_t third = temp.size() / 3;
+        melee = Units(temp.begin(), temp.begin() + third);
+        army = Units(temp.begin() + third, temp.end());
+    }
+    
 }
 
 void GooseBot::VerifyArmyFocus() {
 
     if (build_phase == 1) {
-        zergl_cap = 0;
+        zergl_cap = 2;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
@@ -88,24 +97,24 @@ void GooseBot::VerifyArmyFocus() {
 
     }
     else if (build_phase == 5 || build_phase == 6) {
-        zergl_cap = 0;
+        zergl_cap = 10;
         roach_cap = 10;
         mutal_cap = 0;
         banel_cap = 30;
         ultra_cap = 0;
  
     }else if (build_phase >= 7 && build_phase < 10) {
-        zergl_cap = 0;
-        roach_cap = 0;
+        zergl_cap = 10;
+        roach_cap = 10;
         mutal_cap = 28;
-        banel_cap = 0;
+        banel_cap = 10;
         ultra_cap = 0;
 
     } else if (build_phase == 10) {
-        zergl_cap = 0;
-        roach_cap = 0;
-        mutal_cap = 0;
-        banel_cap = 0;
+        zergl_cap = 10;
+        roach_cap = 5;
+        mutal_cap = 5;
+        banel_cap = 5;
         ultra_cap = 20;
         
     }

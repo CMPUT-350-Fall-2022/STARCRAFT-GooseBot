@@ -257,7 +257,9 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         default:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
-            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            if (melee.size() > 5) {
+                Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, unit);
+            }
             //std::cout << "enemy unit check fail" << std::endl;
 
             break;
