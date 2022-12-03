@@ -213,274 +213,52 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
 }
 
 
-// Very simple for now.
-void GooseBot::scout(const Unit* unit)
-{
-    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, /*possibleBaseGrounds[0]*/GetRandomEntry(enemyStartLocations));
-}
-
-void GooseBot::scoutPoint(const Unit* unit, Point2D point)
-{
-    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_MOVE, point);
-}
-
-
-void GooseBot::AppendBases(Units& units, Unit::Alliance alliance, UNIT_TYPEID id)
-{
+void GooseBot::OnUnitEnterVision(const Unit* unit) {
     const ObservationInterface* observation = Observation();
-    Units bases = observation->GetUnits(alliance, IsUnit(id));
-    units.insert(units.end(), bases.begin(), bases.end());
-}
+    Point2D last_seen = unit->pos;
+    
+    
+        //uint32_t army_count = observation->GetArmyCount();
+        //Unit* army = new Unit[army_count];
+        //Units zergls = observation->GetUnits(Unit::Alliance::Self, IsUnit(zergl));
+        //Units banels = observation->GetUnits(Unit::Alliance::Self, IsUnit(banel));
+        //Units mutals = observation->GetUnits(Unit::Alliance::Self, IsUnit(mutal));
+        //Units roaches = observation->GetUnits(Unit::Alliance::Self, IsUnit(roach));
+        //Units queens = observation->GetUnits(Unit::Alliance::Self, IsUnit(queens));
 
+        //Units attack_army = getArmy();
+        //for (auto& unit : attack_army) {
+        //    std::cout << unit->unit_type << std::endl;
+        //}
 
-const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
-{
-    // Initialize each centroid to be the position of a geyser in a pair of 2 closests geysers, discarding the other (there are 2 geysers per base location)
-    const ObservationInterface* observation = Observation();
-    auto geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
-    std::vector<Point2D> centroids = {};
-    while (geysers.size() > 1)
-    {
-        auto geyser = geysers.back();
-        geysers.pop_back();
-        centroids.push_back(geyser->pos);
-        auto minDist = Distance2D(geyser->pos, geysers[0]->pos);
-        auto closest_i = 0;
-        for (auto i = 0;  i < geysers.size();  ++i)
+        switch (unit->unit_type.ToType())
         {
-            auto dist = Distance2D(geyser->pos, geysers[i]->pos);
-            if (dist < minDist)
-            {
-                minDist = dist;
-                closest_i = i;
-            }
-        }
-        geysers.erase(geysers.begin() + closest_i);
-    }
-
-    // Group minerals and vespene into the cluster with the closest centroid
-    auto resources = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(mineralTypes));
-    for (auto i = 0;  i < 3;  ++i)
-    {   
-        // Initialize clusters
-        std::vector<std::pair<Point2D, std::vector<const Unit*>>> clusters = {};
-        for (auto &centroid : centroids)
+        case commc:
+        case hatch:
+        case nexus:
         {
-            std::vector<const Unit*> bucket = {};
-            clusters.push_back(std::make_pair(centroid, bucket));
-        }
+            //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
+            //Actions()->UnitCommand(banels, ABILITY_ID::ATTACK, last_seen);
+            //Actions()->UnitCommand(mutals, ABILITY_ID::ATTACK, last_seen);
+            //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
+            //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
 
-        // Cluster minerals and vespene
-        for (auto &resource : resources)
-        {
-            auto cluster_i = 0;
-            auto minDist = Distance2D(clusters[0].first, resource->pos);
-            for (auto j = 1;  j < clusters.size();  ++j)
-            {
-                auto dist = Distance2D(clusters[j].first, resource->pos);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    cluster_i = j;
-                }
-            }
-            clusters[cluster_i].second.push_back(resource);
-        }
-        
-        // On the 3rd pass, sort the centroids based on how suitable of a position they are for building a base
-        if (i == 2)
-        {
-            std::sort(clusters.begin(), clusters.end(), [&observation](std::pair<Point2D, std::vector<const Unit*>> cluster1, std::pair<Point2D, std::vector<const Unit*>> cluster2)
-            {
-                auto c1Score = 0;
-                auto c2Score = 0;
-                for (auto &resource : cluster1.second)
-                {
-                    switch (resource->unit_type.ToType())
-                    {
-                        case UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER:    // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD:     // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750:      // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD:     // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750:
-                            c1Score += 20;
-                            break;
-                        default:
-                            c1Score += 10;
-                            break;
-                    }
-                }
-                for (auto &resource : cluster2.second)
-                {
-                    switch (resource->unit_type.ToType())
-                    {
-                        case UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER:    // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD:     // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750:  // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD:     // Intentionally falls through
-                        case UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750:
-                            c2Score += 20;
-                            break;
-                        default:
-                            c2Score += 10;
-                            break;
-                    }
-                }
-                auto basePos = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY))[0]->pos;     //TODO: Figure out if it'd be better to use GetNewerBase() from Building.cpp here
-                c1Score -= Distance2D(cluster1.first, basePos);
-                c2Score -= Distance2D(cluster2.first, basePos);
-                
-                return c1Score > c2Score;
-            });
-
-            for (auto j = 0;  j < centroids.size();  ++j)
-            {
-                centroids[j] = clusters[j].first;
+            enemy_base = unit->pos;
+            EnemyLocated = true;
+            if (ArmyReady()) {
+                //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             }
             break;
         }
-        
-        // before the 3rd pass, recalculate the centroids so that they are in the center 
-        // (ish, doesn't really seem to work well in practice at the moment) of the cluster, 
-        // rather than where the vespene is
-        for (auto j = 0;  j < centroids.size();  ++j)
+        default:
         {
-            auto clusterSize = clusters[j].second.size();
-            Point2D newCentroid;
-            for (auto &resource : clusters[j].second)
-            {
-                newCentroid += resource->pos;
-            }
-            newCentroid /= clusterSize;
-            centroids[j] = newCentroid;
+            //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
+            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            //std::cout << "enemy unit check fail" << std::endl;
+
+            break;
         }
-    }
-    return centroids;
-}
-
-
-bool GooseBot::UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const
-{
-    Point2D unit1Pos = unit1.pos;
-    Point2D unit2Pos = unit2.pos;
-    return Distance2D(unit1Pos, unit2Pos) < proximity;
-}
-
-
-const Units GooseBot::FindAllMineralPatches()
-{
-    return Observation()->GetUnits(Unit::Alliance::Neutral, IsUnits(mineralTypes));
-}
-
-
-const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start) {
-    Units units = Observation()->GetUnits(Unit::Alliance::Self);
-    float distance = std::numeric_limits<float>::max();
-    const Unit* target = nullptr;
-
-    for (const auto& u : units)
-    {
-
-        if (u->unit_type == target_unit)
-        {
-            float d = DistanceSquared2D(u->pos, start);
-            if (d < distance)
-            {
-                distance = d;
-                target = u;
-            }
         }
-    }
-    return target;
-}
-
-const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start) {
-    Units units = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(target_units));
-    float distance = std::numeric_limits<float>::max();
-    const Unit* target = nullptr;
-    for (const auto& u : units)
-    {
-        if (std::find(target_units.begin(), target_units.end(), u->unit_type) != target_units.end())
-        {
-            float d = DistanceSquared2D(u->pos, start);
-            if (d < distance)
-            {
-                distance = d;
-                target = u;
-            }
-        }
-    }
-    return target;
-}
-
-
-const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
-    Units units = FindAllMineralPatches();
-    float distance = std::numeric_limits<float>::max();
-    const Unit * target = nullptr;
-    for (const auto& u : units)
-    {
-        float d = DistanceSquared2D(u->pos, start);
-        if (d < distance)
-        {
-            distance = d;
-            target = u;
-        }                   
-    }
-    return target;
-}
-
-bool GooseBot::TryHarvestVespene() {
-    Units workers = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
     
-    if (workers.empty()) {
-        return false;
-    }
-
-
-    const Unit* unit = GetRandomEntry(workers);
-    const Unit* vespene_target = FindNearestAllied(UNIT_TYPEID::ZERG_EXTRACTOR, unit->pos);
-
-    if (!vespene_target)
-    {
-        return false;
-    }
-    if (vespene_target->build_progress != 1) {
-        return false;
-    }
-
-    if (vespene_target->assigned_harvesters>=vespene_target->ideal_harvesters) {//change this to not be hardcoded
-        return false;
-    }
-    
-    Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
-    return true;
-    
-    
+    //std::cout << "army check fail" << std::endl;
 }
-
-bool GooseBot::TryBirthQueen(){
-    if (   (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
-        || (actionPending(ABILITY_ID::TRAIN_QUEEN))
-        || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= queen_cap)  ){
-        return false;
-    }
-    const Unit * base = GetNewerBase();
-    if (base != nullptr){
-        Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
-        return true;
-    }else{
-        return false;
-    }
-    return false;
-}
-
-Units GooseBot::getArmy() { return army; }
-
-Point2D GooseBot::getEnemyLocation() { return enemy_base; }
-
-// EFFECT_INJECTLARVA target hatchery/lair
-// MORPH_LAIR no target
-
-// MORPH_OVERLORDTRANSPORT no target
-// BUFF_ID QUEENSPAWNLARVATIMER

@@ -191,23 +191,6 @@ bool GooseBot::TryMorphHive() {
 	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
 }
 
-//return true if the action is pending, false otherwise
-bool GooseBot::actionPending(ABILITY_ID action){
-	return (std::find(pendingOrders.begin(), pendingOrders.end(), action) != pendingOrders.end());
-}
-
-//get the pending orders for the game step
-void GooseBot::VerifyPending(){
-	pendingOrders.clear();
-	const ObservationInterface* observation = Observation();
-	Units workers = observation->GetUnits(Unit::Alliance::Self);
-	for (const auto& worker : workers) {
-		for (const auto& order : worker->orders) {
-			pendingOrders.insert(order.ability_id);
-		}
-	}
-}
-
 const Unit* GooseBot::GetMainBase(){
 	const ObservationInterface* observation = Observation();
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
