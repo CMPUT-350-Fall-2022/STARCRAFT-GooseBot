@@ -183,29 +183,12 @@ bool GooseBot::TryMorphLair() {
 //try to morph lair into hive
 bool GooseBot::TryMorphHive() {
 	const Unit *base = GetMainBase();
-	if ((base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
-		&& CanAfford(UNIT_TYPEID::ZERG_HIVE)
-		&& (!actionPending(ABILITY_ID::MORPH_HIVE))) {
+	if (base == nullptr || (base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
+		|| (!CanAfford(UNIT_TYPEID::ZERG_HIVE))
+		|| (actionPending(ABILITY_ID::MORPH_HIVE))) {
 		return false;
 	}
-	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
-}
-
-//return true if the action is pending, false otherwise
-bool GooseBot::actionPending(ABILITY_ID action){
-	return (std::find(pendingOrders.begin(), pendingOrders.end(), action) != pendingOrders.end());
-}
-
-//get the pending orders for the game step
-void GooseBot::VerifyPending(){
-	pendingOrders.clear();
-	const ObservationInterface* observation = Observation();
-	Units workers = observation->GetUnits(Unit::Alliance::Self);
-	for (const auto& worker : workers) {
-		for (const auto& order : worker->orders) {
-			pendingOrders.insert(order.ability_id);
-		}
-	}
+	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
 }
 
 const Unit* GooseBot::GetMainBase(){

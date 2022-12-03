@@ -1,5 +1,22 @@
 #include "GooseBot.h"
-                 
+//return true if the action is pending, false otherwise
+bool GooseBot::actionPending(ABILITY_ID action){
+	return (std::find(pendingOrders.begin(), pendingOrders.end(), action) != pendingOrders.end());
+}
+
+
+//get the pending orders for the game step
+void GooseBot::VerifyPending(){
+	pendingOrders.clear();
+	const ObservationInterface* observation = Observation();
+	Units workers = observation->GetUnits(Unit::Alliance::Self);
+	for (const auto& worker : workers) {
+		for (const auto& order : worker->orders) {
+			pendingOrders.insert(order.ability_id);
+		}
+	}
+}
+
 void GooseBot::VerifyBuild(){
     build_phase = 0;
     Units built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
@@ -107,15 +124,6 @@ size_t GooseBot::CountUnitType(UNIT_TYPEID unit_type){
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
-//returns random unit of given type
-const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
-    auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    if (all_of_type.size() != 0){
-        return GetRandomEntry(all_of_type);
-    }else{
-        return nullptr;
-    }
-}
 
 // Assumes up-to-date num_bases
 void GooseBot::SetDroneCap(){
@@ -136,21 +144,23 @@ void GooseBot::SetQueenCap(){
 }
 
 //TODO, finish making this actually do its job 
-void GooseBot::Prioritize(){
-    if (build_phase <= army_phase){
-        SetSavingsFalse();
-        saving_for_building = true;
-    }
-    else if (build_phase > army_phase){
-        SetSavingsFalse();
-        saving_for_army = true;
-    }
-}
+// void GooseBot::Prioritize(){
+//     if (build_phase <= army_phase){
+//         SetSavingsFalse();
+//         saving_for_building = true;
+//     }
+//     else if (build_phase > army_phase){
+//         SetSavingsFalse();
+//         saving_for_army = true;
+//     }
+// }
 
 void GooseBot::SetSavingsFalse(){
     saving_for_army = false;
     saving_for_building = false;
     saving_for_research = false;
 }
+
+
 
 

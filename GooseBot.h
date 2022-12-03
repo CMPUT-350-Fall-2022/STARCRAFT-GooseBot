@@ -1,6 +1,8 @@
 #ifndef GOOSE_BOT_H_
 #define GOOSE_BOT_H_
 
+// MORPH_OVERLORDTRANSPORT no target
+
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -141,6 +143,7 @@ class GooseBot : public sc2::Agent {
 
 
         Units army;
+        Units defense;
         size_t army_cap = 30;
         Point2D enemy_base;
         bool EnemyLocated = false;
