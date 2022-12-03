@@ -136,16 +136,16 @@ void GooseBot::SetQueenCap(){
 }
 
 //TODO, finish making this actually do its job 
-void GooseBot::Prioritize(){
-    if (build_phase <= army_phase){
-        SetSavingsFalse();
-        saving_for_building = true;
-    }
-    else if (build_phase > army_phase){
-        SetSavingsFalse();
-        saving_for_army = true;
-    }
-}
+// void GooseBot::Prioritize(){
+//     if (build_phase <= army_phase){
+//         SetSavingsFalse();
+//         saving_for_building = true;
+//     }
+//     else if (build_phase > army_phase){
+//         SetSavingsFalse();
+//         saving_for_army = true;
+//     }
+// }
 
 void GooseBot::SetSavingsFalse(){
     saving_for_army = false;

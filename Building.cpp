@@ -183,12 +183,12 @@ bool GooseBot::TryMorphLair() {
 //try to morph lair into hive
 bool GooseBot::TryMorphHive() {
 	const Unit *base = GetMainBase();
-	if ((base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
-		&& CanAfford(UNIT_TYPEID::ZERG_HIVE)
-		&& (!actionPending(ABILITY_ID::MORPH_HIVE))) {
+	if (base == nullptr || (base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
+		|| (!CanAfford(UNIT_TYPEID::ZERG_HIVE))
+		|| (actionPending(ABILITY_ID::MORPH_HIVE))) {
 		return false;
 	}
-	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
+	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
 }
 
 //return true if the action is pending, false otherwise

@@ -45,22 +45,18 @@ void GooseBot::OnStep() {
     // Make sure pendingOrders are current
     VerifyPending();
     CountBases();
-    Prioritize();
+    //Prioritize();
 
     if (TryHarvestVespene()) {
         std::cout << "Harvesting Vespene" << std::endl;
         return;
     }
-    if (saving_for_building){
+    if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
-        BuildPhase();
         return;        
     }
-    if (saving_for_army){ 
-        std::cout << "Army Phase " << army_phase << std::endl;
-        if (ArmyPhase()){
-            ++army_phase;
-        }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
         return;
     }
     if (ResearchPhase()){
