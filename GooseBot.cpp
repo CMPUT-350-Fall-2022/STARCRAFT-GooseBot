@@ -121,12 +121,16 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case drone:
     {
-        const Unit* mineral_target = FindNearestMineralPatch(GetNewerBase()->pos);
-        if (!mineral_target)
-        {
-            break;
+        const Unit * base = GetNewerBase();
+        if (base!=nullptr) {
+            const Unit* mineral_target = FindNearestMineralPatch(base->pos);
+            if (!mineral_target)
+            {
+                break;
+            }
+            Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
         }
-        Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+       
         break;
     }
 
@@ -164,7 +168,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         const Unit* base = FindNearestAllied(baseTypes, unit->pos);
         //iterator pointing to buff if found, end if not found
-        if (base)
+        if (base!=nullptr)
         {
             auto hasInjection = std::find(base->buffs.begin(), base->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
             if (hasInjection == base->buffs.end())

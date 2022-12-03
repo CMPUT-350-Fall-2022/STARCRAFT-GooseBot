@@ -111,6 +111,9 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
     // Get a unit to build the structure.
     const Unit* unit_to_build = FindUnit(worker_type);
 	// Try to build at a position in a random direction from builder
+	if (unit_to_build == nullptr) {
+		return false;
+	}
     float rx = GetRandomScalar();
     float ry = GetRandomScalar();
 	Point2D pos = Point2D(unit_to_build->pos.x + rx * 15.0f, unit_to_build->pos.y + ry * 15.0f);
@@ -138,6 +141,9 @@ bool GooseBot::TryBuildHatchery() {
 	const Unit* base = GetMainBase();
 	float rx = GetRandomScalar();
 	float ry = GetRandomScalar();
+	if (base==nullptr) {
+		return false;
+	}
 	Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
 	if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
 			// Check to see if worker can morph at target location
@@ -174,18 +180,25 @@ bool GooseBot::TryBuildHatchery() {
 bool GooseBot::TryMorphLair() {
 	const Unit *base = GetMainBase();
 	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) || CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 1 
-		|| actionPending(ABILITY_ID::MORPH_LAIR) || (base->unit_type != UNIT_TYPEID::ZERG_HATCHERY)) {
+		|| actionPending(ABILITY_ID::MORPH_LAIR) ) {
 		return false;
 	}
+	else if (base->unit_type != UNIT_TYPEID::ZERG_HATCHERY) {
+		return false;
+	}
+	std::cout << "morphing Lair" << std::endl;
 	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
 }
 
 //try to morph lair into hive
 bool GooseBot::TryMorphHive() {
 	const Unit *base = GetMainBase();
-	if (base == nullptr || (base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
-		|| (!CanAfford(UNIT_TYPEID::ZERG_HIVE))
-		|| (actionPending(ABILITY_ID::MORPH_HIVE))) {
+	if (base==nullptr) {
+		return false;
+	}
+	if ((base->unit_type != UNIT_TYPEID::ZERG_LAIR) 
+		&& CanAfford(UNIT_TYPEID::ZERG_HIVE)
+		&& (!actionPending(ABILITY_ID::MORPH_HIVE))) {
 		return false;
 	}
 	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
