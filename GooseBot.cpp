@@ -1,17 +1,5 @@
 #include "GooseBot.h"
 
-#define larva UNIT_TYPEID::ZERG_LARVA
-#define drone UNIT_TYPEID::ZERG_DRONE
-#define zergl UNIT_TYPEID::ZERG_ZERGLING
-#define banel UNIT_TYPEID::ZERG_BANELING
-#define overl UNIT_TYPEID::ZERG_OVERLORD
-#define queen UNIT_TYPEID::ZERG_QUEEN
-#define roach UNIT_TYPEID::ZERG_ROACH
-#define mutal UNIT_TYPEID::ZERG_MUTALISK
-
-
-using namespace sc2;
-
 void GooseBot::OnGameStart()
 { 
     possibleBaseGrounds = FindBaseBuildingGrounds();
@@ -53,60 +41,30 @@ void GooseBot::OnGameEnd()
 }
 
 
-void GooseBot::OnStep() { 
-    VerifyPhase();
+void GooseBot::OnStep() {
+    // Make sure pendingOrders are current
     VerifyPending();
-    if (TryBuildStructure(abilities[phase], targetStruct[phase])) {
-        std::cout << "Built structure for phase " << phase << std::endl;
-        return;
-    }
-    if (TryMorphLair()){
-        std::cout << "Morphed Lair" << std::endl;
-        return;
-    }
-    if (TryBirthQueen()){
-        std::cout << "Birthed Queen" << std::endl;
-        return;
-    }
-    if (TryMorphExtractor()) {
-        std::cout << "Morphed Extractor" << std::endl;
-        return;
-    }
-    if (TryHarvestVespene()) {
-        return;
-    }
-    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
-        std::cout << "Researched" << std::endl;
-        return;
-    }
-    if (TryBuildStructure(ABILITY_ID::BUILD_BANELINGNEST, UNIT_TYPEID::ZERG_BANELINGNEST)) {
-        return;
-    }
+    CountBases();
+    Prioritize();
 
-    int spotIndex = 0;
-    Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    int breakCounter = 0;
-    bool morphedHatchery;
-    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot)))
-    {
-        if (!(spotIndex < possibleBaseGrounds.size() - 1))
-        { 
-            break;
-        }
-        if (breakCounter >= 20)
-        {
-            spotIndex++;
-            buildSpot = possibleBaseGrounds[spotIndex];
-            breakCounter = 0;
-        }
-        else
-        {
-            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-            breakCounter++;
-        }
+    if (TryHarvestVespene()) {
+        std::cout << "Harvesting Vespene" << std::endl;
+        return;
     }
-    if (morphedHatchery)
-    {
+    if (saving_for_building){
+        std::cout << "Build Phase " << build_phase << std::endl;
+        BuildPhase();
+        return;        
+    }
+    if (saving_for_army){ 
+        std::cout << "Army Phase " << army_phase << std::endl;
+        if (ArmyPhase()){
+            ++army_phase;
+        }
+        return;
+    }
+    if (ResearchPhase()){
+        std::cout << "Research Phase " << std::endl;
         return;
     } 
 }
@@ -116,11 +74,11 @@ void GooseBot::OnStep() {
 void GooseBot::OnUnitIdle(const Unit* unit) {
     //get the current game state observation
     const ObservationInterface* observation = Observation();
-    size_t drone_count = countUnitType(drone);
-    size_t zergl_count = countUnitType(zergl);
-    size_t banel_count = countUnitType(banel);
-    size_t roach_count = countUnitType(roach);
-    size_t mutal_count = countUnitType(mutal);
+    size_t drone_count = CountUnitType(drone);
+    size_t zergl_count = CountUnitType(zergl);
+    size_t banel_count = CountUnitType(banel);
+    size_t roach_count = CountUnitType(roach);
+    size_t mutal_count = CountUnitType(mutal);
 
     //for our unit pointer, we do a switch-case dependent on it's type
     switch (unit->unit_type.ToType())
@@ -131,48 +89,43 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
         {   //if our total number of workers is less than 30
-            if ((drone_count <= 16 - 2))      //TODO: change this limit to rely on our number of hatcheries
+            if ((drone_count < drone_cap))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
             }
+            if (mutal_count < mutal_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                break;
+            }
 
-            //if our zergling count is less than or equal to 10
-            if (zergl_count <= 10)
+            if (roach_count < roach_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
+                break;
+            }
+                //if our zergling count is less than or equal to 10
+            if (zergl_count < zergl_cap)
             {   //try to train a zergling (this can't be done unless there is an existing spawning pool
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
                 break;
             }
-
-            if (roach_count <= 5)
+           
+        }else{
+            //spawns overlord to increase supply cap when we need supply increase
+            VerifyPending();
+            if (build_phase > 2 && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
             {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-
-
-                break;
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
             }
-
-            if (mutal_count < zergl_count)
-            {
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-
-
-                break;
-            }
-            //TODO: I feel like a break was probably intended to be here, but i'm not sure, someone decide.
-        }
-
-        //spawns overlord to increase supply cap when we have only one available opening
-        //if (countUnitType(UNIT_TYPEID::ZERG_OVERLORD) < overlordCap[phase])
-        {
-            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
         break;
     }
 
     case drone:
     {
-        const Unit* mineral_target = FindNearestMineralPatch(unit->pos);
+        const Unit* mineral_target = FindNearestMineralPatch(GetNewerBase()->pos);
         if (!mineral_target)
         {
             break;
@@ -213,40 +166,40 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case queen:
     {
-        const Unit* hatchery = FindNearestAllied(UNIT_TYPEID::ZERG_HATCHERY, unit->pos);
+        const Unit* base = FindNearestAllied(baseTypes, unit->pos);
         //iterator pointing to buff if found, end if not found
-        if (hatchery)
+        if (base)
         {
-            auto hasInjection = std::find(hatchery->buffs.begin(), hatchery->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
-            if (hasInjection == hatchery->buffs.end())
+            auto hasInjection = std::find(base->buffs.begin(), base->buffs.end(), BUFF_ID::QUEENSPAWNLARVATIMER);
+            if (hasInjection == base->buffs.end())
             {     //if no injection
-                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
-                break;
+                Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, base);
+            }else{
+                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, 10);
             }
         }
-        TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, tumorCap[phase]);
         break;
     }
 
     case zergl:
     {
-        if (banel_count < zergl_count) {
+        if (banel_count < banel_cap) {
             Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
         }
     }
 
-    case banel:
-    case mutal:
-    case roach: 
-    {
-        army.push_back(unit);
-        break;
-    }
+    //I dont think we need this now that we have VerifyArmy
+    // case banel:
+    // case mutal:
+    // case roach: 
+    // {
+    //     army.push_back(unit);
+    //     break;
+    // }
         default:
             break;
     }
 }
-
 
 void GooseBot::OnUnitDestroyed(const Unit* unit)
 {
@@ -445,6 +398,25 @@ const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& 
     return target;
 }
 
+const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start) {
+    Units units = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(target_units));
+    float distance = std::numeric_limits<float>::max();
+    const Unit* target = nullptr;
+    for (const auto& u : units)
+    {
+        if (std::find(target_units.begin(), target_units.end(), u->unit_type) != target_units.end())
+        {
+            float d = DistanceSquared2D(u->pos, start);
+            if (d < distance)
+            {
+                distance = d;
+                target = u;
+            }
+        }
+    }
+    return target;
+}
+
 
 const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
     Units units = FindAllMineralPatches();
@@ -460,21 +432,6 @@ const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
         }                   
     }
     return target;
-}
-
-// Returns number of allied units of given type
-size_t GooseBot::countUnitType(UNIT_TYPEID unit_type){
-    return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
-}
-
-//returns random unit of given type
-const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
-    auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
-    if (all_of_type.size() != 0){
-        return GetRandomEntry(all_of_type);
-    }else{
-        return nullptr;
-    }
 }
 
 bool GooseBot::TryHarvestVespene() {
@@ -508,95 +465,18 @@ bool GooseBot::TryHarvestVespene() {
 
 bool GooseBot::TryBirthQueen(){
     if (   (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
-        || (actionPending(ABILITY_ID::TRAIN_QUEEN))  ){
+        || (actionPending(ABILITY_ID::TRAIN_QUEEN))
+        || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= queen_cap)  ){
         return false;
     }
-    const Unit * base = GetMainBase();
-    if ((countUnitType(UNIT_TYPEID::ZERG_QUEEN) < queenCap[phase]) && (base != nullptr)){
+    const Unit * base = GetNewerBase();
+    if (base != nullptr){
         Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
         return true;
     }else{
         return false;
     }
     return false;
-}
-
-//Check if can afford unit
-bool GooseBot::CanAfford(UNIT_TYPEID unit){
-    const ObservationInterface* observation = Observation();
-    int mineral_supply = observation->GetMinerals();
-    int gas_supply = observation->GetVespene();
-    auto const unit_data = observation->GetUnitTypeData();
-    for (auto data : unit_data){
-        if (data.unit_type_id == unit){ 
-            if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
-                if ( ((data.tech_requirement != UNIT_TYPEID::INVALID) && (countUnitType(data.tech_requirement) > 0))
-                    || (data.tech_requirement == UNIT_TYPEID::INVALID) ){
-                    return true;
-                }
-                return false;
-            }else{
-                return false;
-            }
-        }
-    }
-    return false;
-}
-
-//Check if can afford upgrade
-bool GooseBot::CanAfford(UPGRADE_ID upgrade){
-    const ObservationInterface* observation = Observation();
-    int mineral_supply = observation->GetMinerals();
-    int gas_supply = observation->GetVespene();
-    auto const upgrade_data = observation->GetUpgradeData();
-    for (auto data : upgrade_data){
-        if (data.upgrade_id == static_cast<uint32_t>(upgrade)){ 
-            if ( (mineral_supply >= data.mineral_cost) && (gas_supply >= data.vespene_cost)){
-                return true;
-            }else{
-                return false;
-            }
-        }
-    }
-    std::cout << "data does not contain the ability ";
-    return false;
-}
-
-void GooseBot::VerifyPhase(){
-    const ObservationInterface* observation = Observation();
-    auto units = observation->GetUnits(Unit::Alliance::Self);
-    size_t i = 0;
-    for (auto unit : units){
-        auto it = find(targetStruct.begin(), targetStruct.end(), unit->unit_type);
-
-        // If element was found
-        if (it != targetStruct.end())
-        {
-            // calculating the index
-            i = it - targetStruct.begin();
-           
-        }
-        else {
-            //not found  
-        }
-      
-    }
-    phase = i;
-}
-
-bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade) {
-    if (actionPending(ability)
-        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())) {
-        return false;
-    }
-    const Unit* researcher = FindUnit(researcher_type);
-    if (researcher != nullptr && CanAfford(upgrade)) {
-        Actions()->UnitCommand(researcher, ability);
-        return true;
-    }
-    else {
-        return false;
-    }
 }
 
 Units GooseBot::getArmy() { return army; }

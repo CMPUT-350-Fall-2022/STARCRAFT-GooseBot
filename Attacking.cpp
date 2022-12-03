@@ -1,15 +1,4 @@
 #include "GooseBot.h"
-#define larva UNIT_TYPEID::ZERG_LARVA
-#define drone UNIT_TYPEID::ZERG_DRONE
-#define zergl UNIT_TYPEID::ZERG_ZERGLING
-#define banel UNIT_TYPEID::ZERG_BANELING
-#define overl UNIT_TYPEID::ZERG_OVERLORD
-#define queen UNIT_TYPEID::ZERG_QUEEN
-#define roach UNIT_TYPEID::ZERG_ROACH
-#define mutal UNIT_TYPEID::ZERG_MUTALISK
-#define hatch UNIT_TYPEID::ZERG_HATCHERY
-#define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
-#define nexus UNIT_TYPEID::PROTOSS_NEXUS
 
 bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
     size_t z_ideal = 10, b_ideal = 10, r_ideal = 0, m_ideal = 0, q_ideal = 0;
@@ -35,11 +24,11 @@ bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
 }
 
 bool GooseBot::ArmyReady() {
-    size_t zergl_count = countUnitType(zergl);
-    size_t banel_count = countUnitType(banel);
-    size_t roach_count = countUnitType(roach);
-    size_t mutal_count = countUnitType(mutal);
-    size_t queen_count = countUnitType(queen);
+    size_t zergl_count = CountUnitType(zergl);
+    size_t banel_count = CountUnitType(banel);
+    size_t roach_count = CountUnitType(roach);
+    size_t mutal_count = CountUnitType(mutal);
+    size_t queen_count = CountUnitType(queen);
 
     //return checkConditions(zergl_count, banel_count, roach_count, mutal_count, queen_count);
     return true;
@@ -76,19 +65,17 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
 
-
-
-            //enemy_base = unit->pos;
+            enemy_base = unit->pos;
             EnemyLocated = true;
             if (ArmyReady()) {
-                Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+                //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             }
             break;
         }
         default:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
-            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
             //std::cout << "enemy unit check fail" << std::endl;
 
             break;
@@ -96,4 +83,52 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         }
     
     //std::cout << "army check fail" << std::endl;
+}
+
+bool GooseBot::ArmyPhase(){
+    SetDroneCap();
+    SetQueenCap();
+
+    // Handle base units
+    if (TryBirthQueen()){
+        std::cout << "Birthed Queen" << std::endl;
+        return true; 
+    }
+
+    // Handle attack units
+    VerifyArmy();
+    VerifyArmyFocus();
+    // send half to attack
+    if (army.size() >= army_cap && EnemyLocated){
+        //Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
+        return true;
+    }
+    return false;
+}
+
+void GooseBot::VerifyArmy(){
+    army.clear();
+    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel};
+    army = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+}
+
+void GooseBot::VerifyArmyFocus(){
+    if (build_phase < 4){
+        zergl_cap = 30;
+        roach_cap = 0;
+        mutal_cap = 0;
+        banel_cap = 0;
+
+    }else if (build_phase >= 4 && build_phase <= 6){
+        zergl_cap = 30;
+        roach_cap = 30;
+        mutal_cap = 0;
+        banel_cap = 30;
+    }else if (build_phase >= 7 && build_phase < 10){
+        zergl_cap = 30;
+        roach_cap = 0;
+        mutal_cap = 28;
+        banel_cap = 0;
+    }
+    army_cap = zergl_cap + roach_cap + mutal_cap + queen_cap;
 }
