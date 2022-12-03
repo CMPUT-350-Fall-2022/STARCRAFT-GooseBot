@@ -66,7 +66,7 @@ class GooseBot : public sc2::Agent {
         void scoutPoint(const Unit* unit, Point2D point);
 
         bool BuildPhase();
-        void CountBases();
+        void HandleBases();
         void SetDroneCap();
         void SetQueenCap();
 
@@ -91,6 +91,7 @@ class GooseBot : public sc2::Agent {
         const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+        bool GooseBot::TryDistributeMineralWorkers();
 
         Point2D GooseBot::getEnemyLocation();
         Units GooseBot::getArmy();
@@ -162,9 +163,10 @@ class GooseBot : public sc2::Agent {
             BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
             BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
             BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
-            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 8
-            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 9
-            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 10
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 8
+            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 9
+            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 10
+            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 11
         
         const std::vector<UNIT_TYPEID> struct_units = {
             UNIT_TYPEID::ZERG_HATCHERY,

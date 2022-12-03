@@ -58,22 +58,18 @@ bool GooseBot::BuildPhase(){
     }// Build next structure based on its custom build function, if it has one
     for (size_t j = 0; j < struct_targets.size(); ++j){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
-            std::cout << "Trying to build Extractor" << std::endl;
             return TryMorphExtractor();
         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-            std::cout << "Trying to build Hatchery" << std::endl;
             return TryBuildHatchery();
         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
-            std::cout << "Trying to morph Lair" << std::endl;
             return TryMorphLair();
         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_HIVE){
             return TryMorphHive();
         }
         else {
-            std::cout << "Trying to build generic building" << std::endl;
             return TryBuildStructure((*to_build).second, (*to_build).first);
         }
     }

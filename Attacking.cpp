@@ -50,7 +50,7 @@ bool GooseBot::ArmyPhase(){
     // send half to attack
     if (army.size() >= army_cap && EnemyLocated){
         //Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
-        return true;
+        //return true;
     }
     return false;
 }
