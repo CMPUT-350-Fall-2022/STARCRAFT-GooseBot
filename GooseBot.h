@@ -66,7 +66,7 @@ class GooseBot : public sc2::Agent {
         void scoutPoint(const Unit* unit, Point2D point);
 
         bool BuildPhase();
-        void CountBases();
+        void HandleBases();
         void SetDroneCap();
         void SetQueenCap();
 
@@ -91,6 +91,7 @@ class GooseBot : public sc2::Agent {
         const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
+        bool GooseBot::TryDistributeMineralWorkers();
 
         Point2D GooseBot::getEnemyLocation();
         Units GooseBot::getArmy();

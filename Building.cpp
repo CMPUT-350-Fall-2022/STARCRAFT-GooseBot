@@ -142,7 +142,9 @@ bool GooseBot::TryBuildHatchery() {
 	if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
 			// Check to see if worker can morph at target location
 		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
+			std::cout << "Trying to build Hatchery" << std::endl;
 			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
+			TryDistributeMineralWorkers();
 			return true;
 		}else {return false;}
 	}
@@ -227,11 +229,12 @@ const Unit* GooseBot::GetNewerBase(){
 }
 
 //
- void GooseBot::CountBases(){
+ void GooseBot::HandleBases(){
 	num_bases = 0;
 	const ObservationInterface* observation = Observation();
 	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY)).size();
 	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR)).size();
 	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE)).size();
+	
 }
 

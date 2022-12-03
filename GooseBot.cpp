@@ -44,11 +44,10 @@ void GooseBot::OnGameEnd()
 void GooseBot::OnStep() {
     // Make sure pendingOrders are current
     VerifyPending();
-    CountBases();
+    HandleBases();
     //Prioritize();
 
     if (TryHarvestVespene()) {
-        std::cout << "Harvesting Vespene" << std::endl;
         return;
     }
     if (BuildPhase()){
