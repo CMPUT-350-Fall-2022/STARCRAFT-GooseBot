@@ -245,9 +245,9 @@ const Unit* GooseBot::GetNewerBase(){
  void GooseBot::HandleBases(){
 	num_bases = 0;
 	const ObservationInterface* observation = Observation();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY)).size();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR)).size();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE)).size();
-	
+	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
+	if (build_phase == 4|| build_phase == 8){
+		TryDistributeMineralWorkers();
+	}	
 }
 

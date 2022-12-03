@@ -50,13 +50,13 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
-    if (BuildPhase()){
-        std::cout << "Build Phase " << build_phase << std::endl;
-        return;        
-    }
     if (ArmyPhase()){ 
         std::cout << "Army Phase " << std::endl;
         return;
+    }
+    if (BuildPhase()){
+        std::cout << "Build Phase " << build_phase << std::endl;
+        return;        
     }
     if (ResearchPhase()){
         std::cout << "Research Phase " << std::endl;
