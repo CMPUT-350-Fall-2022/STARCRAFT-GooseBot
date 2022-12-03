@@ -247,7 +247,7 @@ const Unit* GooseBot::GetNewerBase(){
 	const ObservationInterface* observation = Observation();
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
 	if (build_phase == 4|| build_phase == 8){
-		TryDistributeMineralWorkers();
+		//TryDistributeMineralWorkers();
 	}	
 }
 
