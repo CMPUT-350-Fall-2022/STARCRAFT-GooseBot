@@ -44,20 +44,19 @@ void GooseBot::OnGameEnd()
 void GooseBot::OnStep() {
     // Make sure pendingOrders are current
     VerifyPending();
-    CountBases();
+    HandleBases();
     //Prioritize();
 
     if (TryHarvestVespene()) {
-        std::cout << "Harvesting Vespene" << std::endl;
+        return;
+    }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
         return;
     }
     if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
-    }
-    if (ArmyPhase()){ 
-        std::cout << "Army Phase " << std::endl;
-        return;
     }
     if (ResearchPhase()){
         std::cout << "Research Phase " << std::endl;
@@ -175,7 +174,10 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             {     //if no injection
                 Actions()->UnitCommand(unit, ABILITY_ID::EFFECT_INJECTLARVA, base);
             }else{
-                TryBuildStructure(ABILITY_ID::BUILD_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMOR, unit->unit_type, 10);
+                float rx = GetRandomScalar();
+                float ry = GetRandomScalar();
+                Point2D pos = Point2D(unit->pos.x + rx * 15.0f, unit->pos.y + ry * 15.0f);
+                Actions()->UnitCommand(unit, ABILITY_ID::BUILD_CREEPTUMOR, pos);
             }
         }
         break;

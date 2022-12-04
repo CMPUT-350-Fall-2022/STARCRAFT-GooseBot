@@ -136,44 +136,46 @@ bool GooseBot::TryBuildHatchery() {
 		return false;
 	}
 
-	// Try to build at a position in a random direction from 
-	// base location
-	const Unit* base = GetMainBase();
-	float rx = GetRandomScalar();
-	float ry = GetRandomScalar();
-	if (base==nullptr) {
-		return false;
-	}
-	Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
-	if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
-			// Check to see if worker can morph at target location
-		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
-			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
-			return true;
-		}else {return false;}
-	}
-    // Query failed
-    return false;
+	// // Try to build at a position in a random direction from 
+	// // base location
+	// const Unit* base = GetMainBase();
+	// float rx = GetRandomScalar();
+	// float ry = GetRandomScalar();
+	// if (base==nullptr) {
+	// 	return false;
+	// }
+	// Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
+	// if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
+	// 		// Check to see if worker can morph at target location
+	// 	if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
+	// 		std::cout << "Trying to build Hatchery" << std::endl;
+	// 		Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
+	// 		TryDistributeMineralWorkers();
+	// 		return true;
+	// 	}else {return false;}
+	// }
+    // // Query failed
+    // return false;
 
-	// int spotIndex = 0;
-    // Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    // int breakCounter = 0;
-    // bool morphedHatchery;
-    // while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
-    //     if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
-    //         break;
-    //     }
-    //     if (breakCounter >= 20){
-    //         spotIndex++;
-    //         buildSpot = possibleBaseGrounds[spotIndex];
-    //         breakCounter = 0;
-    //     }
-    //     else{
-    //         buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-    //         breakCounter++;
-    //     }
-    // }
-	// return morphedHatchery;
+	int spotIndex = 0;
+    Point2D buildSpot = possibleBaseGrounds[spotIndex];
+    int breakCounter = 0;
+    bool morphedHatchery;
+    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
+        if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
+            break;
+        }
+        if (breakCounter >= 20){
+            spotIndex++;
+            buildSpot = possibleBaseGrounds[spotIndex];
+            breakCounter = 0;
+        }
+        else{
+            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
+            breakCounter++;
+        }
+    }
+	return morphedHatchery;
 }
 
 //try to morph hatchery into lair
@@ -240,11 +242,12 @@ const Unit* GooseBot::GetNewerBase(){
 }
 
 //
- void GooseBot::CountBases(){
+ void GooseBot::HandleBases(){
 	num_bases = 0;
 	const ObservationInterface* observation = Observation();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY)).size();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR)).size();
-	num_bases += observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE)).size();
+	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
+	if (build_phase == 4|| build_phase == 8){
+		//TryDistributeMineralWorkers();
+	}	
 }
 
