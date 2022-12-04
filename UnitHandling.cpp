@@ -19,7 +19,7 @@ bool GooseBot::TryHarvestVespene() {
         return false;
     }
 
-    if (vespene_target->assigned_harvesters>=vespene_target->ideal_harvesters) {//change this to not be hardcoded
+    if (vespene_target->assigned_harvesters >= vespene_target->ideal_harvesters) {
         return false;
     }
     
@@ -30,27 +30,30 @@ bool GooseBot::TryHarvestVespene() {
 
 // Distribute workers over vespene geysers for harvesting
 bool GooseBot::TryDistributeMineralWorkers() {
-    std::cout << "Trying to distribute workers" << std::endl;
-    Units workers = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_DRONE));
     Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
 
-    if (workers.empty()) {
+    if (bases.empty() || num_bases == 1) {
         return false;
     }
-    size_t w = workers.size();
-    size_t b = bases.size();
-
-    size_t workersPerBase = w/b;
-
-    auto it = workers.begin();
+    std::cout << "Trying to distribute workers" << std::endl;
+    Units available_workers;
+    size_t surplus = 0;
     for (auto base : bases){
-        if (it + workersPerBase <= workers.end()){
-            Actions()->UnitCommand(Units(it, it + workersPerBase), ABILITY_ID::GENERAL_MOVE, base->pos);
-            it += workersPerBase;
-        }else{
-            Actions()->UnitCommand(Units(it, workers.end()), ABILITY_ID::GENERAL_MOVE, base->pos);
+        size_t workers_needed = base->ideal_harvesters - base->assigned_harvesters;
+        if (workers_needed < 0){
+            surplus += (-workers_needed);
+            for (size_t i = 0; i < surplus; ++i){
+                const Unit* available = FindNearestAllied(drone, base->pos);
+                if (available != nullptr){
+                    available_workers.push_back(available);
+                }
+            }
+        }else if (workers_needed > 0 && (!available_workers.empty())){
+            Actions()->UnitCommand(available_workers, ABILITY_ID::SMART, base);
+            return true;
         }
-    }   
+    }
+    return false;   
 }
 
 // Try to birth a queen unit from a base
