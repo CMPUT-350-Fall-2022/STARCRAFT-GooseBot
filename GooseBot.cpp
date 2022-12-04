@@ -50,6 +50,10 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
+    if (ResearchPhase()){
+        std::cout << "Research Phase " << std::endl;
+        return;
+    }
     if (ArmyPhase()){ 
         std::cout << "Army Phase " << std::endl;
         return;
@@ -58,10 +62,7 @@ void GooseBot::OnStep() {
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
-    if (ResearchPhase()){
-        std::cout << "Research Phase " << std::endl;
-        return;
-    } 
+ 
 }
 
 
@@ -267,4 +268,24 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         }
     
     //std::cout << "army check fail" << std::endl;
+}
+
+void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
+    switch (unit->unit_type.ToType()){
+        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
+            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
+            TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+            break;
+        }
+        case UNIT_TYPEID::ZERG_HATCHERY:{
+            TryDistributeMineralWorkers();
+            break;
+        }
+    }
+
+}
+
+void GooseBot::OnUnitCreated(const Unit* unit){
+    return;
 }

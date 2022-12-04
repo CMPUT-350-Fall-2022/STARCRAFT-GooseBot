@@ -1,6 +1,9 @@
 #include "GooseBot.h"
 
 bool GooseBot::ResearchPhase(){
+    if (build_phase == 1){
+        return TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED);
+    }
     if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
         std::cout << "Overlord Speed Increased" << std::endl;
         return true;

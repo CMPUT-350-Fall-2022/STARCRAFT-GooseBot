@@ -46,7 +46,7 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (build_phase == 4 || (build_phase > 4 && num_bases < 3)){
+                if (build_phase > 2 && num_bases < 4){
                     break;
                 }else{
                     continue;
@@ -73,6 +73,7 @@ bool GooseBot::BuildPhase(){
             return TryBuildStructure((*to_build).second, (*to_build).first);
         }
     }
+    return false;
 }
 
 //Check if can afford upgrade
