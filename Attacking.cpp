@@ -60,7 +60,7 @@ void GooseBot::VerifyArmy(){
     army.clear();
     melee.clear();
 
-    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel, ultra};
+    std::vector<UNIT_TYPEID> army_units = {zergl, roach, mutal, banel, ultra};
 
     Units temp = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
     if (!temp.empty()) {
