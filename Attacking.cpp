@@ -24,14 +24,13 @@ bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
 }
 
 bool GooseBot::ArmyReady() {
-    size_t zergl_count = CountUnitType(zergl);
-    size_t banel_count = CountUnitType(banel);
-    size_t roach_count = CountUnitType(roach);
-    size_t mutal_count = CountUnitType(mutal);
-    size_t queen_count = CountUnitType(queen);
-
-    //return checkConditions(zergl_count, banel_count, roach_count, mutal_count, queen_count);
-    return true;
+    if (army.size() >= army_cap) {
+        return true;
+    }
+    else {
+        std::cout << "Army Not Ready"<<std::endl;
+        return false;
+    }
 }
 
 bool GooseBot::ArmyPhase(){
@@ -47,18 +46,39 @@ bool GooseBot::ArmyPhase(){
     // Handle attack units
     VerifyArmy();
     VerifyArmyFocus();
-    // send half to attack
-    if (army.size() >= army_cap && EnemyLocated){
-        //Actions()->UnitCommand(Units(army.begin(), army.begin() + army_cap), ABILITY_ID::ATTACK, enemy_base);
-        //return true;
+
+    // check if enemy base still exists
+    if (!enemy_base.empty()) {
+        if (enemy_base.back() == nullptr) {
+            std::cout << "base was defeated" << std::endl;
+            enemy_base.pop_back();
+        }
+    }
+
+    // send army to attack
+    if (EnemyLocated && !enemy_base.empty()) {
+        
+        if (ArmyReady()) {
+            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
+           
+        }
     }
     return false;
 }
 
 void GooseBot::VerifyArmy(){
     army.clear();
-    std::vector<UNIT_TYPEID> army_units = {zergl, roach, banel};
-    army = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+    melee.clear();
+
+    std::vector<UNIT_TYPEID> army_units = {zergl, roach, mutal, banel, ultra};
+
+    Units temp = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(army_units));
+    if (!temp.empty()) {
+        size_t third = temp.size() / 3;
+        melee = Units(temp.begin(), temp.begin() + third);
+        army = Units(temp.begin() + third, temp.end());
+    }
+    
 }
 
 void GooseBot::VerifyArmyFocus() {
@@ -88,28 +108,28 @@ void GooseBot::VerifyArmyFocus() {
 
     }
     else if (build_phase == 5 || build_phase == 6) {
-        zergl_cap = 0;
+        zergl_cap = 10;
         roach_cap = 10;
         mutal_cap = 0;
         banel_cap = 30;
         ultra_cap = 0;
  
     }else if (build_phase >= 7 && build_phase < 10) {
-        zergl_cap = 0;
-        roach_cap = 0;
+        zergl_cap = 10;
+        roach_cap = 10;
         mutal_cap = 28;
-        banel_cap = 0;
+        banel_cap = 10;
         ultra_cap = 0;
 
     } else if (build_phase == 10) {
-        zergl_cap = 0;
-        roach_cap = 0;
-        mutal_cap = 0;
+        zergl_cap = 5;
+        roach_cap = 10;
+        mutal_cap = 10;
         banel_cap = 0;
         ultra_cap = 20;
         
     }
 
 
-    army_cap = zergl_cap + roach_cap + mutal_cap + queen_cap;
+    //army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;
 }

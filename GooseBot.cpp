@@ -5,7 +5,11 @@ void GooseBot::OnGameStart()
     possibleBaseGrounds = FindBaseBuildingGrounds();
     enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
+
+    //reserve space in vectors
     army.reserve(100);
+    melee.reserve(50);
+    enemy_base.reserve(5);
     return; 
 }
 
@@ -65,7 +69,7 @@ void GooseBot::OnStep() {
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
- 
+    
 }
 
 
@@ -252,20 +256,28 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(mutals, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
-
-            enemy_base = unit->pos;
-            EnemyLocated = true;
-            if (ArmyReady()) {
-                //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            if (enemy_base.empty()) {
+                enemy_base.push_back(unit);
+                
+                EnemyLocated = true;
+            }
+            else {
+                if (std::find(enemy_base.begin(), enemy_base.end(), unit) != enemy_base.end()) {
+                    break;
+                }
+                else {
+                    enemy_base.push_back(unit);
+                    break;
+                }
             }
             break;
         }
         default:
         {
-            //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
-            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
-            //std::cout << "enemy unit check fail" << std::endl;
-
+           
+            if (melee.size() >= melee_cap) {
+                Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, unit);
+            }
             break;
         }
         }
