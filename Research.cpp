@@ -1,14 +1,11 @@
 #include "GooseBot.h"
 
 bool GooseBot::ResearchPhase(){
-    if (build_phase == 1){
+    if (research_phase == 1){
         return TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED);
-    }
-    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
-        std::cout << "Overlord Speed Increased" << std::endl;
-        return true;
     }else{++research_phase;}
-    if (TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED)){
+    if (research_phase == 2){
+        TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
         std::cout << "Zergling Speed Increased" << std::endl;
         return true;
     }

@@ -66,34 +66,20 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 /// <returns>BOOL, true if extractor can be built, false otherwise</returns>
 bool GooseBot::TryMorphExtractor() {
 	const ObservationInterface* observation = Observation();
-	
-	size_t base_count = CountUnitType(UNIT_TYPEID::ZERG_HATCHERY)
-		+ CountUnitType(UNIT_TYPEID::ZERG_LAIR) + CountUnitType(UNIT_TYPEID::ZERG_HIVE);
 	const Unit* base = GetNewerBase();
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
 	if ((base == nullptr) 
-		|| (CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*base_count)
+		|| (CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*num_bases)
 		|| (actionPending(ABILITY_ID::BUILD_EXTRACTOR))
 		|| (!CanAfford(UNIT_TYPEID::ZERG_EXTRACTOR))) {
 		return false;
 	}
-	//only search within this radius
-	float minimum_distance = 15.0f;
-	Tag closestGeyser = 0;
-	for (const auto& geyser : geysers) {
-		float current_distance = Distance2D(base->pos, geyser->pos);
-		if (current_distance < minimum_distance) {
-			if (Query()->Placement(ABILITY_ID::BUILD_EXTRACTOR, geyser->pos)) {
-				minimum_distance = current_distance;
-				closestGeyser = geyser->tag;
-			}
-		}
-	}
+	const Unit* closestGeyser = FindNearestVespeneGeyser(base->pos);
 	// In the case where there are no more available geysers nearby
-	if (closestGeyser == 0) {
+	if (closestGeyser == nullptr) {
 		return false;
 	}
-	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser);
+	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser->tag);
 }
 
 // from tutorial, adapted
@@ -135,47 +121,55 @@ bool GooseBot::TryBuildHatchery() {
 		|| (unit_to_build == nullptr)){
 		return false;
 	}
+	const Unit* base = GetMainBase();
+	if (base==nullptr) {
+		return false;
+	}
+	if (possibleBaseGrounds.empty()){
+		return false;
+	}
+	// Iterator to base ground spot
+	Point2D buildSpot = possibleBaseGrounds.back();
+	// check if the point is between two geyesers
+	const Unit* close_geyser = FindNearestVespeneGeyser(buildSpot);
+	const Unit* far_geyser = FindNearestVespeneGeyser(close_geyser->pos);
+	if (close_geyser == nullptr || far_geyser == nullptr){
+		possibleBaseGrounds.pop_back();
+		return false;
+	}
+	if (Distance2D(far_geyser->pos, buildSpot) < Distance2D(close_geyser->pos, far_geyser->pos)){
+		// Check to see if worker can morph at target location
+		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, buildSpot)) {
+			std::cout << "Trying to build Hatchery" << std::endl;
+			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, buildSpot);
+			return true;
+		}else {
+			possibleBaseGrounds.pop_back();
+			return false;
+		}
+	}
+    // Query failed
+    return false;
 
-	// // Try to build at a position in a random direction from 
-	// // base location
-	// const Unit* base = GetMainBase();
-	// float rx = GetRandomScalar();
-	// float ry = GetRandomScalar();
-	// if (base==nullptr) {
-	// 	return false;
-	// }
-	// Point2D pos = Point2D(base->pos.x + rx * 40.0f, base->pos.y + ry * 40.0f);
-	// if (Distance2D(FindNearestMineralPatch(pos)->pos, base->pos) > 30.0f){
-	// 		// Check to see if worker can morph at target location
-	// 	if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, pos)) {
-	// 		std::cout << "Trying to build Hatchery" << std::endl;
-	// 		Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, pos);
-	// 		TryDistributeMineralWorkers();
-	// 		return true;
-	// 	}else {return false;}
-	// }
-    // // Query failed
-    // return false;
-
-	int spotIndex = 0;
-    Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    int breakCounter = 0;
-    bool morphedHatchery;
-    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
-        if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
-            break;
-        }
-        if (breakCounter >= 20){
-            spotIndex++;
-            buildSpot = possibleBaseGrounds[spotIndex];
-            breakCounter = 0;
-        }
-        else{
-            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-            breakCounter++;
-        }
-    }
-	return morphedHatchery;
+	// int spotIndex = 0;
+    // Point2D buildSpot = possibleBaseGrounds[spotIndex];
+    // int breakCounter = 0;
+    // bool morphedHatchery;
+    // while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
+    //     if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
+    //         break;
+    //     }
+    //     if (breakCounter >= 20){
+    //         spotIndex++;
+    //         buildSpot = possibleBaseGrounds[spotIndex];
+    //         breakCounter = 0;
+    //     }
+    //     else{
+    //         buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
+    //         breakCounter++;
+    //     }
+    // }
+	// return morphedHatchery;
 }
 
 //try to morph hatchery into lair
