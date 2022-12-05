@@ -1,42 +1,21 @@
 #include "GooseBot.h"
+/*******************
+ * This file contains functions for handling attack units and attacks
+********************/
 
-bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
-    size_t z_ideal = 10, b_ideal = 10, r_ideal = 0, m_ideal = 0, q_ideal = 0;
-    for (size_t i = 0; i < 5; i++)
-    {
-        if (z < z_ideal) {
-            return false;
-        }
-        if (b < b_ideal) {
-            return false;
-        }
-        if (r < r_ideal) {
-            return false;
-        }
-        if (m < m_ideal) {
-            return false;
-        }
-        if (q < q_ideal) {
-            return false;
-        }
-    }
-    return true;
-}
-
+// Returns whether army is large enough to attack
 bool GooseBot::ArmyReady() {
     if (army.size() >= army_cap) {
         return true;
     }
     else {
-       // std::cout << "Army Not Ready"<<std::endl;
         return false;
     }
 }
 
+// Tries to execute army functions, returns true if one executes successfully
+// [Called once in OnStep()]
 bool GooseBot::ArmyPhase(){
-    SetDroneCap();
-    SetQueenCap();
-
     // Handle base units
     if (TryBirthQueen()){
         std::cout << "Birthed Queen" << std::endl;
@@ -47,30 +26,31 @@ bool GooseBot::ArmyPhase(){
     VerifyArmy();
     VerifyArmyFocus();
 
-    // check if enemy base still exists
+    // Check if enemy base still exists
     if (!enemy_base.empty()) {
         if (enemy_base.back() == nullptr) {
-            std::cout << "base was defeated" << std::endl;
-            
             enemy_base.pop_back();
         }
     }
 
-    // send army to attack
+    // Send army to attack
     if (EnemyLocated && !enemy_base.empty()) {
-        
         if (ArmyReady()) {
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
-           
+            return true; 
         }
     }
-    if (!idle_larvae.empty()){
-        Actions()->UnitCommand(idle_larvae.back(), ABILITY_ID::TRAIN_ZERGLING);
-        idle_larvae.pop_back();
-    }
+    // // Try to use some idle larva
+    // if (!idle_larvae.empty()){
+    //     Actions()->UnitCommand(idle_larvae.back(), ABILITY_ID::TRAIN_ZERGLING);
+    //     idle_larvae.pop_back();
+    //     //purposefully don't call true here 
+    // }
     return false;
 }
 
+// Resets army vectors
+// Called once in ArmyPhase()
 void GooseBot::VerifyArmy(){
     army.clear();
     melee.clear();
@@ -86,55 +66,47 @@ void GooseBot::VerifyArmy(){
     
 }
 
+// Changes different types of unit caps based on build phase
 void GooseBot::VerifyArmyFocus() {
 
     if (build_phase == 1) {
         zergl_cap = 0;
         roach_cap = 0;
         mutal_cap = 0;
-        banel_cap = 0;
         ultra_cap = 0;
 
-    }
-    else if (build_phase >= 2 && build_phase < 4) {
+    } else if (build_phase >= 2 && build_phase < 4) {
         zergl_cap = 20;
         roach_cap = 0;
         mutal_cap = 0;
-        banel_cap = 0;
         ultra_cap = 0;
 
-    }
-    else if (build_phase == 4) {
+    } else if (build_phase >= 4 && build_phase < 7) {
         zergl_cap = 20;
         roach_cap = 40;
         mutal_cap = 0;
-        banel_cap = 0;
         ultra_cap = 0;
 
-    }
-    else if (build_phase == 5 || build_phase == 6) {
-        zergl_cap = 10;
-        roach_cap = 10;
-        mutal_cap = 0;
-        banel_cap = 30;
-        ultra_cap = 0;
- 
-    }else if (build_phase >= 7 && build_phase < 10) {
+    } else if (build_phase >= 7 && build_phase < 10) {
         zergl_cap = 10;
         roach_cap = 10;
         mutal_cap = 28;
-        banel_cap = 10;
         ultra_cap = 0;
 
     } else if (build_phase == 10) {
         zergl_cap = 5;
         roach_cap = 10;
         mutal_cap = 10;
-        banel_cap = 0;
         ultra_cap = 20;
-        
     }
+}
 
-
-    //army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;
+// Counts all army unit types to update variables for OnIdle larva
+// [Called once under case:larva in OnIdle()]
+void GooseBot::VerifyArmyCounts(){
+    const ObservationInterface* obs = Observation();
+    size_t drone_count = obs->GetUnits(Unit::Alliance::Self, IsUnit(drone)).size();
+    size_t zergl_count = obs->GetUnits(Unit::Alliance::Self, IsUnit(zergl)).size();
+    size_t roach_count = obs->GetUnits(Unit::Alliance::Self, IsUnit(roach)).size();
+    size_t mutal_count = obs->GetUnits(Unit::Alliance::Self, IsUnit(mutal)).size();
 }

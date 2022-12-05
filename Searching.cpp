@@ -1,4 +1,9 @@
 #include "GooseBot.h"
+/*******************
+ * This file contains functions for scouting & locating units
+********************/
+
+
 // Very simple for now.
 void GooseBot::scout(const Unit* unit){
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
