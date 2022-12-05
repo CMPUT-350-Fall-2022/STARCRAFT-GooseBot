@@ -28,7 +28,7 @@ bool GooseBot::ArmyReady() {
         return true;
     }
     else {
-        std::cout << "Army Not Ready"<<std::endl;
+       // std::cout << "Army Not Ready"<<std::endl;
         return false;
     }
 }
@@ -51,6 +51,7 @@ bool GooseBot::ArmyPhase(){
     if (!enemy_base.empty()) {
         if (enemy_base.back() == nullptr) {
             std::cout << "base was defeated" << std::endl;
+            
             enemy_base.pop_back();
         }
     }
@@ -92,7 +93,7 @@ void GooseBot::VerifyArmyFocus() {
 
     }
     else if (build_phase >= 2 && build_phase < 4) {
-        zergl_cap = 30;
+        zergl_cap = 20;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
@@ -101,7 +102,7 @@ void GooseBot::VerifyArmyFocus() {
     }
     else if (build_phase == 4) {
         zergl_cap = 20;
-        roach_cap = 30;
+        roach_cap = 40;
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
