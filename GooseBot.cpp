@@ -50,7 +50,9 @@ void GooseBot::OnStep() {
     VerifyPending();
     HandleBases();
     //Prioritize();
-
+    if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
+        return;
+    }
     if (TryHarvestVespene()) {
         return;
     }
