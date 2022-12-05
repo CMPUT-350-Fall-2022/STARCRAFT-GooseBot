@@ -198,16 +198,23 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         }
     }
 
-    //I dont think we need this now that we have VerifyArmy
-    // case banel:
-    // case mutal:
-    // case roach: 
-    // {
-    //     army.push_back(unit);
-    //     break;
-    // }
-        default:
-            break;
+    
+    case banel:
+    case mutal:
+    case roach: 
+    {
+        if (EnemyLocated && enemy_base.empty()) {
+            //go over the battlezone!!!
+
+            const Unit* to_murder = FindNearestEnemy(unit->pos);
+            if (to_murder != nullptr) {
+                Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, to_murder);
+            }
+        }
+        break;
+    }
+    default:
+        break;
     }
 }
 

@@ -232,3 +232,19 @@ const Unit* GooseBot::FindNearestVespeneGeyser(const Point2D& start){
 	}
     return closestGeyser;
 }
+
+const Unit* GooseBot::FindNearestEnemy(const Point2D& start) {
+    float max_distance = 45.0f;
+    Units enemies = Observation()->GetUnits(Unit::Alliance::Enemy);
+    const Unit* closestEnemy = nullptr;
+    if (!enemies.empty()) {
+        for (const auto& enemy : enemies) {
+           
+            float current_distance = Distance2D(start, enemy->pos);
+            if (current_distance < max_distance && !enemy->is_flying) {
+                closestEnemy = enemy;
+            }
+        }
+    }
+    return closestEnemy;
+}
