@@ -54,6 +54,9 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
+    if (TryDistributeMineralWorkers()){
+        return;
+    }
     if (ResearchPhase()){
         std::cout << "Research Phase " << std::endl;
         return;
@@ -87,7 +90,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     case larva:
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
-        if (observation->GetFoodUsed() <= observation->GetFoodCap() - 1)
+        if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
         {   //if our total number of workers is less than 30
             if ((drone_count < drone_cap))     
             {   //build a worker
@@ -299,5 +302,23 @@ void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
 }
 
 void GooseBot::OnUnitCreated(const Unit* unit){
+    switch (unit->unit_type.ToType()){
+        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:
+        case UNIT_TYPEID::ZERG_EXTRACTOR:
+        case UNIT_TYPEID::ZERG_ROACHWARREN:
+        case UNIT_TYPEID::ZERG_BANELINGNEST:
+        case UNIT_TYPEID::ZERG_HATCHERY:
+        case UNIT_TYPEID::ZERG_INFESTATIONPIT:
+        case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+        {
+            Units available_larva = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
+            Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
+        }
+    }
     return;
 }
+
+void GooseBot::OnUpgradeCompleted(UPGRADE_ID){
+    return;
+};
+

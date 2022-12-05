@@ -42,7 +42,7 @@ class GooseBot : public sc2::Agent {
         virtual void OnGameEnd();
         virtual void OnUnitCreated(const Unit* unit);
         virtual void OnBuildingConstructionComplete(const Unit* unit);
-
+        virtual void OnUpgradeCompleted(UPGRADE_ID);
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
@@ -91,8 +91,9 @@ class GooseBot : public sc2::Agent {
         const std::vector<Point2D> FindBaseBuildingGrounds();
         const Units FindAllMineralPatches();
         const Unit* FindNearestMineralPatch(const Point2D& start);
+        const Unit* FindNearestVespeneGeyser(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
-        const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
+        const Unit* FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
         bool GooseBot::TryDistributeMineralWorkers();
@@ -125,10 +126,10 @@ class GooseBot : public sc2::Agent {
         bool saving_for_building; 
         std::vector<UNIT_TYPEID> built_types;
 
-        size_t army_phase = 1;
+        //size_t army_phase = 1;
         bool saving_for_army;
 
-        size_t research_phase;
+        size_t research_phase = 1;
         bool saving_for_research;
       
         UNIT_TYPEID target_struct;

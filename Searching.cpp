@@ -216,3 +216,19 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
     }
     return centroids;
 }
+
+const Unit* GooseBot::FindNearestVespeneGeyser(const Point2D& start){
+    float max_distance = 15.0f;
+    Units geysers = Observation()->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
+    const Unit* closestGeyser = nullptr;
+	for (const auto& geyser : geysers) {
+		float current_distance = Distance2D(start, geyser->pos);
+		if (current_distance < max_distance) {
+			if (Query()->Placement(ABILITY_ID::BUILD_EXTRACTOR, geyser->pos)) {
+				max_distance = current_distance;
+				closestGeyser = geyser;
+			}
+		}
+	}
+    return closestGeyser;
+}

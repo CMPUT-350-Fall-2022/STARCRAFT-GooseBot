@@ -31,28 +31,53 @@ bool GooseBot::TryHarvestVespene() {
 // Distribute workers over vespene geysers for harvesting
 bool GooseBot::TryDistributeMineralWorkers() {
     Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
-
     if (bases.empty() || num_bases == 1) {
         return false;
     }
-    std::cout << "Trying to distribute workers" << std::endl;
+    std::cout << "Trying to distribute workers ... ";
     Units available_workers;
-    size_t surplus = 0;
+    int surplus = 0;
+    int total_needed = 0;
     for (auto base : bases){
-        size_t workers_needed = base->ideal_harvesters - base->assigned_harvesters;
+        if (base->build_progress != 1){
+            std::cout << "base not finished" << std::endl;
+            return false;
+        }
+        int workers_needed = base->ideal_harvesters - base->assigned_harvesters;
+        total_needed += workers_needed;
         if (workers_needed < 0){
             surplus += (-workers_needed);
-            for (size_t i = 0; i < surplus; ++i){
+            for (int i = 0; i < surplus; ++i){
                 const Unit* available = FindNearestAllied(drone, base->pos);
                 if (available != nullptr){
                     available_workers.push_back(available);
                 }
             }
-        }else if (workers_needed > 0 && (!available_workers.empty())){
-            Actions()->UnitCommand(available_workers, ABILITY_ID::SMART, base);
-            return true;
         }
     }
+    if (total_needed <= 0){
+        std::cout << "None needed" << std::endl;
+        return false;
+    }
+    for (auto base : bases){
+        int workers_needed = base->ideal_harvesters - base->assigned_harvesters;
+        std::cout << "workers needed: " << workers_needed << "... ";
+        if (workers_needed > 0 && (!available_workers.empty())){
+            auto a = available_workers.begin();
+            const Unit* mineral_target = FindNearestMineralPatch(base->pos);
+            if (Units(a, available_workers.end()).size() >= workers_needed){
+                Actions()->UnitCommand(Units(a, a + workers_needed), ABILITY_ID::SMART, mineral_target);
+                a += workers_needed;
+                std::cout << "Workers distributing [mid vector]" << std::endl;
+                return true;
+            }else{
+                Actions()->UnitCommand(Units(a, available_workers.end()), ABILITY_ID::SMART, mineral_target);
+                std::cout << "Workers distributing [end vector]" << std::endl;
+                return true;
+            }
+        }
+    }
+    std::cout << "failed" << std::endl;
     return false;   
 }
 
