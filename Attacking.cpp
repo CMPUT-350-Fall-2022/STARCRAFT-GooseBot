@@ -49,10 +49,10 @@ bool GooseBot::ArmyPhase(){
 
     // check if enemy base still exists
     if (!enemy_base.empty()) {
-        if (enemy_base.back() == nullptr) {
+        if (enemy_base.back() == NULL) {
             std::cout << "base was defeated" << std::endl;
-            
             enemy_base.pop_back();
+           
         }
     }
 
@@ -61,7 +61,6 @@ bool GooseBot::ArmyPhase(){
         
         if (ArmyReady()) {
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
-           
         }
     }
     return false;

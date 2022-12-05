@@ -154,7 +154,8 @@ class GooseBot : public sc2::Agent {
         Units melee;
         size_t melee_cap = 6;
         size_t army_cap = 20;
-        Units enemy_base;
+        std::vector<Tag> enemy_base;
+       
         bool EnemyLocated = false;
 
 
