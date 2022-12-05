@@ -90,7 +90,7 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 	// OR If we have the number of these we want already, do nothing
 	// OR If we can't afford it, do nothing
 	if (actionPending(ability_type_for_structure) || CountUnitType(struct_type) == struct_cap || !CanAfford(struct_type)){
-		std::cout << "failed pre-build checks" << std::endl;
+		//std::cout << "failed pre-build checks" << std::endl;
 		return false;
 	}
 	// Otherwise, build
@@ -106,11 +106,11 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 		// Check to see if worker can morph at target location
 	if (Query()->Placement(ability_type_for_structure, pos)) {
 		Actions()->UnitCommand(unit_to_build, ability_type_for_structure, pos);
-		std::cout << "worker found valid build position ";
+		//std::cout << "worker found valid build position ";
 		return true;
 	}
     // Query failed
-	std::cout << "failed placement query" << std::endl;
+	//std::cout << "failed placement query" << std::endl;
     return false;
 }
 

@@ -51,7 +51,6 @@ bool GooseBot::ArmyPhase(){
     if (!enemy_base.empty()) {
         if (enemy_base.back() == nullptr) {
             std::cout << "base was defeated" << std::endl;
-            
             enemy_base.pop_back();
         }
     }
@@ -61,9 +60,19 @@ bool GooseBot::ArmyPhase(){
         
         if (ArmyReady()) {
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
-           
+            last_base = enemy_base.back()->pos;
         }
     }
+
+    if (EnemyLocated && enemy_base.empty() && last_base!=Point2D(0,0)) {
+        //go over the battlezone!!!
+        
+        const Unit* to_murder = FindNearestEnemy(last_base);
+        if (to_murder != nullptr) {
+            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, to_murder);
+        }
+    }
+
     return false;
 }
 

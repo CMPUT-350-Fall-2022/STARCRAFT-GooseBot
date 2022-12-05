@@ -94,6 +94,7 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestVespeneGeyser(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
         const Unit* FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
+        const Unit* FindNearestEnemy(const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
         bool GooseBot::TryDistributeMineralWorkers();
@@ -155,6 +156,7 @@ class GooseBot : public sc2::Agent {
         size_t melee_cap = 6;
         size_t army_cap = 20;
         Units enemy_base;
+        Point2D last_base = Point2D(0,0);
         bool EnemyLocated = false;
 
 
