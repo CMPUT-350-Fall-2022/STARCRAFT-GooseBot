@@ -96,7 +96,7 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
-        bool GooseBot::TryDistributeMineralWorkers();
+        //bool GooseBot::TryDistributeMineralWorkers();
 
         Point2D GooseBot::getEnemyLocation();
         Units GooseBot::getArmy();
@@ -150,7 +150,7 @@ class GooseBot : public sc2::Agent {
 
 
         Units army;
-        Units defense;
+        Units idle_larvae;
         Units melee;
         size_t melee_cap = 10;
         size_t army_cap = 30;

@@ -1,7 +1,7 @@
 #include "GooseBot.h"
 // Very simple for now.
 void GooseBot::scout(const Unit* unit){
-    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, /*possibleBaseGrounds[0]*/GetRandomEntry(enemyStartLocations));
+    Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
 }
 
 // Go to a point 

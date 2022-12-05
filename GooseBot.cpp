@@ -54,7 +54,7 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
-    if (TryDistributeMineralWorkers()){
+    if (TryBuildHatchery()){
         return;
     }
     if (ResearchPhase()){
@@ -91,8 +91,9 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
-        {   //if our total number of workers is less than 30
-            if ((drone_count < drone_cap))     
+        {   //if the worker cap is less than ideal @ the nearest base
+            const Unit* base = FindNearestAllied(baseTypes, unit->pos);
+            if ((base->ideal_harvesters > base->assigned_harvesters))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
@@ -121,6 +122,8 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             if (build_phase > 2 && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
             {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+            }else{
+                idle_larvae.push_back(unit);
             }
         }
         break;
@@ -294,7 +297,7 @@ void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
             break;
         }
         case UNIT_TYPEID::ZERG_HATCHERY:{
-            TryDistributeMineralWorkers();
+            //TryDistributeMineralWorkers();
             break;
         }
     }
