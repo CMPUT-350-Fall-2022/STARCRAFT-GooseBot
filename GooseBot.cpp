@@ -5,7 +5,11 @@ void GooseBot::OnGameStart()
     possibleBaseGrounds = FindBaseBuildingGrounds();
     enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
+
+    //reserve space in vectors
     army.reserve(100);
+    melee.reserve(50);
+    enemy_base.reserve(5);
     return; 
 }
 
@@ -50,6 +54,10 @@ void GooseBot::OnStep() {
     if (TryHarvestVespene()) {
         return;
     }
+    if (ResearchPhase()){
+        std::cout << "Research Phase " << std::endl;
+        return;
+    }
     if (ArmyPhase()){ 
         std::cout << "Army Phase " << std::endl;
         return;
@@ -58,10 +66,7 @@ void GooseBot::OnStep() {
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
-    if (ResearchPhase()){
-        std::cout << "Research Phase " << std::endl;
-        return;
-    } 
+    
 }
 
 
@@ -248,23 +253,51 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(mutals, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
-
-            enemy_base = unit->pos;
-            EnemyLocated = true;
-            if (ArmyReady()) {
-                //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
+            if (enemy_base.empty()) {
+                enemy_base.push_back(unit);
+                
+                EnemyLocated = true;
+            }
+            else {
+                if (std::find(enemy_base.begin(), enemy_base.end(), unit) != enemy_base.end()) {
+                    break;
+                }
+                else {
+                    enemy_base.push_back(unit);
+                    break;
+                }
             }
             break;
         }
         default:
         {
-            //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, unit);
-            //Actions()->UnitCommand(army, ABILITY_ID::ATTACK, unit);
-            //std::cout << "enemy unit check fail" << std::endl;
-
+           
+            if (melee.size() >= melee_cap) {
+                Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, unit);
+            }
             break;
         }
         }
     
     //std::cout << "army check fail" << std::endl;
+}
+
+void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
+    switch (unit->unit_type.ToType()){
+        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
+            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
+            TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+            break;
+        }
+        case UNIT_TYPEID::ZERG_HATCHERY:{
+            TryDistributeMineralWorkers();
+            break;
+        }
+    }
+
+}
+
+void GooseBot::OnUnitCreated(const Unit* unit){
+    return;
 }

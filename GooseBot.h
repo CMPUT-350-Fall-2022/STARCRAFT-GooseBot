@@ -24,6 +24,7 @@ using namespace sc2;
 #define queen UNIT_TYPEID::ZERG_QUEEN
 #define roach UNIT_TYPEID::ZERG_ROACH
 #define mutal UNIT_TYPEID::ZERG_MUTALISK
+#define ultra UNIT_TYPEID::ZERG_ULTRALISK
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
 #define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
 #define nexus UNIT_TYPEID::PROTOSS_NEXUS
@@ -39,6 +40,9 @@ class GooseBot : public sc2::Agent {
         virtual void OnUnitDestroyed(const Unit* unit) final;
         virtual void OnUnitEnterVision(const Unit* unit) final;
         virtual void OnGameEnd();
+        virtual void OnUnitCreated(const Unit* unit);
+        virtual void OnBuildingConstructionComplete(const Unit* unit);
+
 
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
@@ -146,8 +150,10 @@ class GooseBot : public sc2::Agent {
 
         Units army;
         Units defense;
+        Units melee;
+        size_t melee_cap = 10;
         size_t army_cap = 30;
-        Point2D enemy_base;
+        Units enemy_base;
         bool EnemyLocated = false;
 
 
