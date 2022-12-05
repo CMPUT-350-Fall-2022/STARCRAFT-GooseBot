@@ -46,11 +46,21 @@ bool GooseBot::ArmyPhase(){
     // Handle attack units
     VerifyArmy();
     VerifyArmyFocus();
-    // send half to attack
+
+    // check if enemy base still exists
+    if (!enemy_base.empty()) {
+        if (enemy_base.back() == nullptr) {
+            std::cout << "base was defeated" << std::endl;
+            enemy_base.pop_back();
+        }
+    }
+
+    // send army to attack
     if (EnemyLocated && !enemy_base.empty()) {
+        
         if (ArmyReady()) {
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
-            //enemy_base.pop_back(); how can we check if the base is defeated??
+           
         }
     }
     return false;
@@ -74,7 +84,7 @@ void GooseBot::VerifyArmy(){
 void GooseBot::VerifyArmyFocus() {
 
     if (build_phase == 1) {
-        zergl_cap = 2;
+        zergl_cap = 0;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
@@ -112,14 +122,14 @@ void GooseBot::VerifyArmyFocus() {
         ultra_cap = 0;
 
     } else if (build_phase == 10) {
-        zergl_cap = 10;
-        roach_cap = 5;
-        mutal_cap = 5;
-        banel_cap = 5;
+        zergl_cap = 5;
+        roach_cap = 10;
+        mutal_cap = 10;
+        banel_cap = 0;
         ultra_cap = 20;
         
     }
 
 
-    army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;
+    //army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;
 }

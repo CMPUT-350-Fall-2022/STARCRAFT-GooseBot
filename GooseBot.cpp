@@ -254,15 +254,16 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
             if (enemy_base.empty()) {
-                enemy_base.push_back(unit->pos);
+                enemy_base.push_back(unit);
+                
                 EnemyLocated = true;
             }
             else {
-                if (std::find(enemy_base.begin(), enemy_base.end(), unit->pos) != enemy_base.end()) {
+                if (std::find(enemy_base.begin(), enemy_base.end(), unit) != enemy_base.end()) {
                     break;
                 }
                 else {
-                    enemy_base.push_back(unit->pos);
+                    enemy_base.push_back(unit);
                     break;
                 }
             }
