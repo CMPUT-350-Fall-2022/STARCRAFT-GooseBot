@@ -188,11 +188,26 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             }
             break;
         }
-        // In other case, do nothing
+        // If army unit
+        case banel:
+        case mutal:
+        case roach: 
+        {
+            if (EnemyLocated && enemy_base.empty()) {
+                //go over the battlezone!!!
+
+                const Unit* to_murder = FindNearestEnemy(unit->pos);
+                if (to_murder != nullptr) {
+                    Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, to_murder);
+                }
+            }
+            break;
+        }
         default:
         {
             break;
         }
+        
     }
 }
 

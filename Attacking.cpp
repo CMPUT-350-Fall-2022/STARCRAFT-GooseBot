@@ -29,23 +29,21 @@ bool GooseBot::ArmyPhase(){
     // Check if enemy base still exists
     if (!enemy_base.empty()) {
         if (enemy_base.back() == nullptr) {
+            std::cout << "base was defeated" << std::endl;
             enemy_base.pop_back();
         }
     }
 
     // Send army to attack
-    if (EnemyLocated && !enemy_base.empty()) {
-        if (ArmyReady()) {
-            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
-            return true; 
+    if (EnemyLocated && enemy_base.empty() && last_base!=Point2D(0,0)) {
+        //go over the battlezone!!!
+        
+        const Unit* to_murder = FindNearestEnemy(last_base);
+        if (to_murder != nullptr) {
+            Actions()->UnitCommand(army, ABILITY_ID::ATTACK, to_murder);
         }
     }
-    // // Try to use some idle larva
-    // if (!idle_larvae.empty()){
-    //     Actions()->UnitCommand(idle_larvae.back(), ABILITY_ID::TRAIN_ZERGLING);
-    //     idle_larvae.pop_back();
-    //     //purposefully don't call true here 
-    // }
+
     return false;
 }
 

@@ -91,6 +91,7 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestVespeneGeyser(const Point2D& start);
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
         const Unit* FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
+        const Unit* FindNearestEnemy(const Point2D& start);
 
     private:
         // Number of bases
@@ -141,6 +142,7 @@ class GooseBot : public sc2::Agent {
         
         // Enemy base(s)
         Units enemy_base;
+        Point2D last_base = Point2D(0,0);
         bool EnemyLocated = false;
 
         // Scouts

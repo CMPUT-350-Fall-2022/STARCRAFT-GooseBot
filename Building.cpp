@@ -140,6 +140,7 @@ bool GooseBot::TryBuildNearby(ABILITY_ID ability_type_for_structure, UNIT_TYPEID
 	// If a unit already is building a supply structure of this type, do nothing.
 	// OR If we can't afford it, do nothing
 	if (actionPending(ability_type_for_structure) || !CanAfford(struct_type)){
+		//std::cout << "failed pre-build checks" << std::endl;
 		return false;
 	}
 	// Otherwise, build
