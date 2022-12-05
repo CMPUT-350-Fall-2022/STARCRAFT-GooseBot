@@ -1,7 +1,4 @@
 #include "GooseBot.h"
-/*******************
- * This file contains functions for unit orders not given to idle units or attack units
-********************/
 
 // Distribute workers over vespene geysers for harvesting
 bool GooseBot::TryHarvestVespene() {
@@ -14,44 +11,24 @@ bool GooseBot::TryHarvestVespene() {
     const Unit* unit = GetRandomEntry(workers);
     const Unit* vespene_target = FindNearestAllied(UNIT_TYPEID::ZERG_EXTRACTOR, unit->pos);
 
-    if (!vespene_target){
+    if (!vespene_target)
+    {
         return false;
     }
     if (vespene_target->build_progress != 1) {
         return false;
     }
+
     if (vespene_target->assigned_harvesters >= vespene_target->ideal_harvesters) {
         return false;
     }
-    Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
-    return true;    
-}
-
-// Try to birth a queen unit from a base
-bool GooseBot::TryBirthQueen(){
-    if (   (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
-        || (actionPending(ABILITY_ID::TRAIN_QUEEN))
-        || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= num_bases)  ){
-        return false;
-    }
-    Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
     
-    // if valid base and not a queen already closeby
-    for (auto base : bases){
-        if (base != nullptr 
-            && (Distance2D(FindNearestAllied(UNIT_TYPEID::ZERG_QUEEN, base->pos)->pos, base->pos) < 10.0f)){
-            Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
-            return true;
-        }else{
-            return false;
-        }
-    }
-    return false;
+    Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
+    return true;
+      
 }
 
-// // Distribute workers over minerals for harvesting
-// // Would probably work if better expansion locations, but not currently working, so commented out
-
+// // Distribute workers over vespene geysers for harvesting
 // bool GooseBot::TryDistributeMineralWorkers() {
 //     Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
 //     if (bases.empty() || num_bases == 1) {
@@ -103,3 +80,26 @@ bool GooseBot::TryBirthQueen(){
 //     std::cout << "failed" << std::endl;
 //     return false;   
 // }
+
+// Try to birth a queen unit from a base
+bool GooseBot::TryBirthQueen(){
+    if ( (!CanAfford(UNIT_TYPEID::ZERG_QUEEN))
+        || (actionPending(ABILITY_ID::TRAIN_QUEEN))
+        || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= num_bases)  ){
+        return false;
+    }
+    Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
+    
+    // if valid base and not a queen already closeby
+    for (auto base : bases){
+        if (base != nullptr 
+            && (Distance2D(FindNearestAllied(UNIT_TYPEID::ZERG_QUEEN, base->pos)->pos, base->pos) < 10.0f)){
+            Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
+            return true;
+        
+        }else{
+            return false;
+        }
+    }
+    return false;
+}

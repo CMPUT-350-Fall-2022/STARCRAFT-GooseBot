@@ -1,9 +1,4 @@
 #include "GooseBot.h"
-/*******************
- * This file contains functions for scouting & locating units
-********************/
-
-
 // Very simple for now.
 void GooseBot::scout(const Unit* unit){
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, GetRandomEntry(enemyStartLocations));
@@ -16,7 +11,7 @@ void GooseBot::scoutPoint(const Unit* unit, Point2D point){
 
 // returns random unit of given type
 const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
-    auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+    Units all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
     if (all_of_type.size() != 0){
         return GetRandomEntry(all_of_type);
     }else{
