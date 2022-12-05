@@ -257,16 +257,16 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
             //Actions()->UnitCommand(roaches, ABILITY_ID::ATTACK, last_seen);
             //Actions()->UnitCommand(queens, ABILITY_ID::ATTACK_ATTACKTOWARDS, unit);
             if (enemy_base.empty()) {
-                enemy_base.push_back(unit->tag);
+                enemy_base.push_back(unit);
                 
                 EnemyLocated = true;
             }
             else {
-                if (std::find(enemy_base.begin(), enemy_base.end(), unit->tag) != enemy_base.end()) {
+                if (std::find(enemy_base.begin(), enemy_base.end(), unit) != enemy_base.end()) {
                     break;
                 }
                 else {
-                    enemy_base.push_back(unit->tag);
+                    enemy_base.push_back(unit);
                     break;
                 }
             }
@@ -274,7 +274,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         }
         default:
         {
-            
+           
             if (melee.size() >= melee_cap) {
                 Actions()->UnitCommand(melee, ABILITY_ID::ATTACK, unit);
             }
