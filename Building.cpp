@@ -66,7 +66,7 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag loca
 /// <returns>BOOL, true if extractor can be built, false otherwise</returns>
 bool GooseBot::TryMorphExtractor() {
 	const ObservationInterface* observation = Observation();
-	const Unit* base = GetNewerBase();
+	const Unit* base = GetMainBase();
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
 	if ((base == nullptr) 
 		|| (CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) >= 2*num_bases)
@@ -186,33 +186,10 @@ const Unit* GooseBot::GetMainBase(){
 	return GetRandomEntry(bases);
 }
 
-const Unit* GooseBot::GetNewerBase(){
-	const ObservationInterface* observation = Observation();
-	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-	if (bases.empty()){
-		bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LAIR));
-		if (bases.empty()){
-			bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HIVE));
-			if (!bases.empty()){
-				return GetRandomEntry(bases);
-			}else{
-				return nullptr;
-			}
-		}else{
-			return GetRandomEntry(bases);
-		}
-	}else{
-		return GetRandomEntry(bases);
-	}
-}
-
 //
- void GooseBot::HandleBases(){
+ void GooseBot::CountBases(){
 	num_bases = 0;
 	const ObservationInterface* observation = Observation();
-	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
-	if (build_phase == 4|| build_phase == 8){
-		//TryDistributeMineralWorkers();
-	}	
+	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();	
 }
 

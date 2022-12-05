@@ -48,7 +48,7 @@ void GooseBot::OnGameEnd()
 void GooseBot::OnStep() {
     // Make sure pendingOrders are current
     VerifyPending();
-    HandleBases();
+    CountBases();
     //Prioritize();
     if (TryResearch(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::RESEARCH_PNEUMATIZEDCARAPACE, UPGRADE_ID::OVERLORDSPEED)){
         return;
@@ -95,7 +95,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
         {   //if the worker cap is less than ideal @ the nearest base
             const Unit* base = FindNearestAllied(baseTypes, unit->pos);
-            if ((base->ideal_harvesters > base->assigned_harvesters))     
+            if ((base->ideal_harvesters - 2 > base->assigned_harvesters))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
@@ -133,7 +133,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
 
     case drone:
     {
-        const Unit * base = GetNewerBase();
+        const Unit * base = GetMainBase();
         if (base!=nullptr) {
             const Unit* mineral_target = FindNearestMineralPatch(base->pos);
             if (!mineral_target)
@@ -196,12 +196,12 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         break;
     }
 
-    case zergl:
-    {
-        if (banel_count < banel_cap) {
-            Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
-        }
-    }
+    // case zergl:
+    // {
+    //     if (banel_count < banel_cap) {
+    //         Actions()->UnitCommand(unit, ABILITY_ID::MORPH_BANELING);
+    //     }
+    // }
 
     //I dont think we need this now that we have VerifyArmy
     // case banel:

@@ -65,7 +65,8 @@ bool GooseBot::ArmyPhase(){
         }
     }
     if (!idle_larvae.empty()){
-        Actions()->UnitCommand(idle_larvae, ABILITY_ID::TRAIN_ZERGLING);
+        Actions()->UnitCommand(idle_larvae.back(), ABILITY_ID::TRAIN_ZERGLING);
+        idle_larvae.pop_back();
     }
     return false;
 }

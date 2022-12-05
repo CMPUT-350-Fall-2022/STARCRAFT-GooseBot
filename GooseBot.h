@@ -47,13 +47,15 @@ class GooseBot : public sc2::Agent {
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
 	    bool TryMorphExtractor();
- 
-        bool TryBirthQueen();
-        bool TryBuildHatchery();
         bool TryMorphLair();
         bool TryMorphHive();
+ 
+        bool TryBirthQueen();
+
+        bool TryBuildHatchery();
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
-	    bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
+	    
+        bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
         
         bool actionPending(ABILITY_ID action);
         size_t CountUnitType(UNIT_TYPEID unit_type);
@@ -61,7 +63,7 @@ class GooseBot : public sc2::Agent {
         const Unit* FindUnit(UNIT_TYPEID unit_type);
 
         const Unit* GetMainBase();
-        const Unit* GetNewerBase();
+        //const Unit* GetNewerBase();
 
         bool CanAfford(UNIT_TYPEID unit);
         bool CanAfford(UPGRADE_ID upgrade);
@@ -70,7 +72,7 @@ class GooseBot : public sc2::Agent {
         void scoutPoint(const Unit* unit, Point2D point);
 
         bool BuildPhase();
-        void HandleBases();
+        void CountBases();
         void SetDroneCap();
         void SetQueenCap();
 
@@ -167,7 +169,7 @@ class GooseBot : public sc2::Agent {
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
             BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
-            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
+            //BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
             BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
             BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 8
@@ -180,7 +182,7 @@ class GooseBot : public sc2::Agent {
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
             UNIT_TYPEID::ZERG_HATCHERY, 
             UNIT_TYPEID::ZERG_ROACHWARREN, 
-            UNIT_TYPEID::ZERG_BANELINGNEST, 
+            //UNIT_TYPEID::ZERG_BANELINGNEST, 
             UNIT_TYPEID::ZERG_LAIR, 
             UNIT_TYPEID::ZERG_SPIRE, 
             UNIT_TYPEID::ZERG_INFESTATIONPIT, 

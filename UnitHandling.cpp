@@ -88,12 +88,18 @@ bool GooseBot::TryBirthQueen(){
         || (CountUnitType(UNIT_TYPEID::ZERG_QUEEN) >= queen_cap)  ){
         return false;
     }
-    const Unit * base = GetNewerBase();
-    if (base != nullptr){
-        Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
-        return true;
-    }else{
-        return false;
+    Units bases = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes));
+    
+    // if valid base and not a queen already closeby
+    for (auto base : bases){
+        if (base != nullptr 
+            && (Distance2D(FindNearestAllied(UNIT_TYPEID::ZERG_QUEEN, base->pos)->pos, base->pos) < 10.0f)){
+            Actions()->UnitCommand(base, ABILITY_ID::TRAIN_QUEEN);
+            return true;
+        
+        }else{
+            return false;
+        }
     }
     return false;
 }

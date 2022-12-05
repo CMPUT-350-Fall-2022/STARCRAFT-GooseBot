@@ -133,7 +133,7 @@ void GooseBot::SetDroneCap(){
 void GooseBot::SetQueenCap(){
     if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0
         && FindUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL)->build_progress == 1){
-        queen_cap = 2*num_bases;
+        queen_cap = num_bases;
     }
     else{
         queen_cap = 0;
