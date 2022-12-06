@@ -1,4 +1,5 @@
 #include "GooseBot.h"
+//DEV BRANCH
 
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
 	//get an observation of the current game state
