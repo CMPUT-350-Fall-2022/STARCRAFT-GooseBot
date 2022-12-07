@@ -1,8 +1,6 @@
 #ifndef GOOSE_BOT_H_
 #define GOOSE_BOT_H_
 
-// MORPH_OVERLORDTRANSPORT no target
-
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -16,6 +14,7 @@
 
 using namespace sc2;
 
+// Unit shorthands
 #define larva UNIT_TYPEID::ZERG_LARVA
 #define drone UNIT_TYPEID::ZERG_DRONE
 #define zergl UNIT_TYPEID::ZERG_ZERGLING
@@ -25,7 +24,8 @@ using namespace sc2;
 #define roach UNIT_TYPEID::ZERG_ROACH
 #define mutal UNIT_TYPEID::ZERG_MUTALISK
 #define ultra UNIT_TYPEID::ZERG_ULTRALISK
-//all base indicators?
+
+// Base indicators
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
 #define lair UNIT_TYPEID::ZERG_LAIR
 #define hive UNIT_TYPEID::ZERG_HIVE
@@ -36,91 +36,144 @@ using namespace sc2;
 #define gate UNIT_TYPEID::PROTOSS_GATEWAY
 #define pylon UNIT_TYPEID::PROTOSS_PYLON
 
+// Filter for finding idle larva
 struct IsIdleLarva {
     IsIdleLarva(){};
     bool operator()(const Unit& unit) { return (unit.unit_type == UNIT_TYPEID::ZERG_LARVA && unit.orders.empty()); };
 };
 
+// Bot Class
 class GooseBot : public sc2::Agent {
 
     public:
+        // Constructor
         GooseBot() = default;
 
+        // Overrides from basic api calls
+
+        // Called when game starts, executes pre-game calculations
         virtual void OnGameStart();
+        // Called each game step, manages bot actions
         virtual void OnStep();
+        // Called when a unit isn't doing anything, handles default actions for unit types
         virtual void OnUnitIdle(const Unit* unit) final;
+        // Called when a unit is destroyed, handles loss based on unit type
         virtual void OnUnitDestroyed(const Unit* unit) final;
+        // Called when another unit comes into our range of vision, handles reactions
         virtual void OnUnitEnterVision(const Unit* unit) final;
+        // Called when the game finishes, shows game results
         virtual void OnGameEnd();
+        // Called when a unit is created, handles desired concurrent actions
         virtual void OnUnitCreated(const Unit* unit);
+        // Called when a building is completed, handles drone loss by attempting to morph new drone
         virtual void OnBuildingConstructionComplete(const Unit* unit);
+        // Called when an upgrade completes, used to track the bot's upgraded vector
         virtual void OnUpgradeCompleted(UPGRADE_ID);
 
+        // Functions to build structures
+        // returns success/failure based on pre-conditions
+
+        // Morph a structure on top of another unit, also used for building upgrades
         bool TryMorphStructure(ABILITY_ID ability_type_for_structure,Tag location_tag, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
-        bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point = Point2D(0,0) , UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
-	    bool TryMorphExtractor();
- 
-        bool TryBirthQueen();
-        bool TryBuildHatchery();
+        // Morph a structure at a point, used to expand based on scouting information
+        bool TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit = UNIT_TYPEID::ZERG_DRONE);
+	    // Morph an extractor, uses TryMorphStructure w/tag after pre-condition checks
+        bool TryMorphExtractor();
+        // Morph a lair from one of the hatcheries
         bool TryMorphLair();
+        // Morph a hive from the lair
         bool TryMorphHive();
+        // Build a structure at a random point close to a randomly selected builder unit
         bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type = UNIT_TYPEID::ZERG_DRONE, size_t struct_cap = 1);
-	    bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
+	    // Build an expansion at a scouted potential base location
+        bool TryBuildHatchery();
+        // Handles the order of structures to be built, tries to build next structure
+        bool BuildPhase();
+        // Updates num_bases
+        void HandleBases(const ObservationInterface* observation);
+
+
+        // Research an upgrade
+        bool TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade);
         
+        // Tries to birth a queen from a base unit
+        bool TryBirthQueen();
+
+        // Checks whether any of our units have already been given the order to do the given action
         bool actionPending(ABILITY_ID action);
+        
+        // Returns the number of units allied to the bot of the given type
         size_t CountUnitType(UNIT_TYPEID unit_type);
 
+        // Returns a pointer to a random unit allied to the bot of the given type
         const Unit* FindUnit(UNIT_TYPEID unit_type);
 
+        // Return a pointer to the bot's most upgraded base
         const Unit* GetMainBase();
+        // Return a pointer to one of the bot's least upgraded bases
         const Unit* GetNewerBase();
 
+        // Returns whether the bot has enough vespene and minerals to create a unit of the given type
         bool CanAfford(UNIT_TYPEID unit);
+        // Returns whether the bot has enough vespene and minerals to research the given upgrade
         bool CanAfford(UPGRADE_ID upgrade);
-        void SetSavingsFalse();
-	    void scout(const Unit* unit);
+        // Sends a unit to scout possible enemy locations
+        void scout(const Unit* unit);
+        // Sends a unit to scout a given point
         void scoutPoint(const Unit* unit, Point2D point);
 
-        bool BuildPhase();
-        void HandleBases(const ObservationInterface* observation);
-        void SetDroneCap();
+        // Decides max number of queens needed
         void SetQueenCap();
 
+        // Handles Queens and sending waves of units depending on built structures
         bool ArmyPhase();
 
+        // Handles order of upgrades, researches next upgrade if available
         bool ResearchPhase();
+        // Checks whether the bot has completed an upgrade already
         bool IsUpgraded(UPGRADE_ID upgrade);
+        // Checks whether the bot possesses a desired structure
+        // --Only works for structures filtered by struct_filter
         bool IsBuilt(UNIT_TYPEID unit);
-        Units built_structs;
 
-
+        // Iterates over the bot's units' actions to update pendingOrders
         void VerifyPending(const ObservationInterface* observation);
+        // Clears and re-fills bot's army and melee trackers with attack units
         void VerifyArmy();
+        // Sets army unit caps based on built structures
         void VerifyArmyFocus();
-        void VerifyBuild();
-        void Prioritize();
-        
+        // Verifies which structures the bot currently has
+        void VerifyBuild();        
 
         // Return true if two units are within a certain distance of each other
         bool UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const;
 
-        void AppendBases(Units& units, Unit::Alliance alliance, UNIT_TYPEID id);
+        // Return a vector of potential base building spots based on map positionings
         const std::vector<Point2D> FindBaseBuildingGrounds();
+        // Return a vector of all neutral mineral patches
         const Units FindAllMineralPatches();
+        // Return a pointer to the closest neutral mineral patch to a given point
         const Unit* FindNearestMineralPatch(const Point2D& start);
+        // Return a pointer to the closest available vespene geyser to a given point
         const Unit* FindNearestVespeneGeyser(const Point2D& start);
+        // Return a pointer to the nearest allied unit type to a given point
         const Unit* FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start);
+        // Return a pointer to the nearest allied unit that has any of the given unit types, to a given point 
         const Unit* FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start);
+        // Return a pointer to the nearest enemy unit to a given point
         const Unit* FindNearestEnemy(const Point2D& start);
 
+        // Optimize vespene worker counts
         bool GooseBot::TryHarvestVespene();
-
-        Point2D GooseBot::getEnemyLocation();
-        Units GooseBot::getArmy();
+        // Determine whether we have enough units to send a wave
+        // Doesn't send a wave if one is in progress
         bool GooseBot::ArmyReady();
 
 
     private:
+
+        // vector of pointers to structures the bot has built
+        Units built_structs;
         size_t num_bases;
         size_t num_desired_bases;
         size_t num_desired_extractors;
@@ -190,7 +243,7 @@ class GooseBot : public sc2::Agent {
             //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
             } ;                // 7
         
-        const std::vector<UNIT_TYPEID> struct_units = {
+        const std::vector<UNIT_TYPEID> struct_filter = {
             UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
             //UNIT_TYPEID::ZERG_HATCHERY, 

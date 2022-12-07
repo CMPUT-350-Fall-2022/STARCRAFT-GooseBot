@@ -20,7 +20,7 @@ void GooseBot::VerifyPending(const ObservationInterface* observation){
 
 void GooseBot::VerifyBuild(){
     build_phase = 0;
-    built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
+    built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_filter));
     built_types.clear();
     for (auto s : built_structs){
         built_types.push_back(s->unit_type);
@@ -122,14 +122,6 @@ size_t GooseBot::CountUnitType(UNIT_TYPEID unit_type){
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
-
-// Assumes up-to-date num_bases
-void GooseBot::SetDroneCap(){
-    if (drone_cap < 14*num_bases){
-        drone_cap += 3;
-    }
-}
-
 // Assumes up-to-date num_bases
 void GooseBot::SetQueenCap(){
     if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0
@@ -141,23 +133,6 @@ void GooseBot::SetQueenCap(){
     }
 }
 
-//TODO, finish making this actually do its job 
-// void GooseBot::Prioritize(){
-//     if (build_phase <= army_phase){
-//         SetSavingsFalse();
-//         saving_for_building = true;
-//     }
-//     else if (build_phase > army_phase){
-//         SetSavingsFalse();
-//         saving_for_army = true;
-//     }
-// }
-
-void GooseBot::SetSavingsFalse(){
-    saving_for_army = false;
-    saving_for_building = false;
-    saving_for_research = false;
-}
 
 
 

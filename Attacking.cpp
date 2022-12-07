@@ -35,7 +35,6 @@ bool GooseBot::ArmyReady() {
 }
 
 bool GooseBot::ArmyPhase(){
-    SetDroneCap();
     SetQueenCap();
 
     // Handle base units
