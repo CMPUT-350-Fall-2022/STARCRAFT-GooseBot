@@ -40,14 +40,16 @@ bool GooseBot::BuildPhase(){
     VerifyBuild();
     // Find the next item to build by iterating over desired structures,
     // setting the structure as next to build if we do not have it (or enough of it)
+    size_t expansion_tracker = 0;
     auto to_build = struct_targets.end();
     for (auto it = struct_targets.begin(); it < struct_targets.end(); ++it){
         auto found = std::find(built_types.begin(), built_types.end(), (*it).first);
         if (found == built_types.end()){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+                ++expansion_tracker;
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+                if (num_bases < expansion_tracker){
                     break;
                 }else{
                     continue;
