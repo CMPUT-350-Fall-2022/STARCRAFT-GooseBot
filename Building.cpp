@@ -135,60 +135,25 @@ bool GooseBot::TryBuildHatchery() {
 	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
 		|| !CanAfford(UNIT_TYPEID::ZERG_HATCHERY)
 		|| (unit_to_build == nullptr)){
+			std::cout << "Failed to find unit to build Hatchery" << std::endl;
 		return false;
 	}
-	// const Unit* base = GetMainBase();
-	// if (base==nullptr) {
-	// 	return false;
-	// }
-	// if (possibleBaseGrounds.empty()){
-	// 	return false;
-	// }
-	// // Iterator to base ground spot
-	// Point2D buildSpot = possibleBaseGrounds.back();
-	// // check if the point is between two geyesers
-	// const Unit* close_geyser = FindNearestVespeneGeyser(buildSpot);
-	
-	// if (close_geyser == nullptr) { return false; }
 
-	// const Unit* far_geyser = FindNearestVespeneGeyser(close_geyser->pos);
-	// if (close_geyser == nullptr || far_geyser == nullptr){
-	// 	possibleBaseGrounds.pop_back();
-	// 	return false;
-	// }
-	// if (Distance2D(far_geyser->pos, buildSpot) < Distance2D(close_geyser->pos, far_geyser->pos)){
-	// 	// Check to see if worker can morph at target location
-	// 	if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, buildSpot)) {
-	// 		std::cout << "Trying to build Hatchery" << std::endl;
-	// 		Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, buildSpot);
-	// 		return true;
-	// 	}else {
-	// 		possibleBaseGrounds.pop_back();
-	// 		return false;
-	// 	}
-	// }
-    // // Query failed
-    // return false;
-
-	int spotIndex = 0;
-    Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    int breakCounter = 0;
-    bool morphedHatchery;
-    while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
-        if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
-            break;
-        }
-        if (breakCounter >= 20){
-            spotIndex++;
-            buildSpot = possibleBaseGrounds[spotIndex];
-            breakCounter = 0;
-        }
-        else{
-            buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-            breakCounter++;
-        }
-    }
-	return morphedHatchery;
+	for (auto &buildSpot : possibleBaseGrounds)
+	{
+		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, buildSpot))
+		{
+			std::cout << "Trying to build Hatchery" << std::endl;
+			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, buildSpot);
+			return true;
+		}
+		else
+		{
+			std::cout << "Failed to build Hatchery" << std::endl;
+		}
+	}
+    // Query failed
+    return false;
 }
 
 //try to morph hatchery into lair
