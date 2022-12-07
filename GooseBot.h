@@ -44,7 +44,9 @@ struct IsIdleLarva {
 
 // Bot Class
 class GooseBot : public sc2::Agent {
-
+    /***********
+     * Public variables
+    ************/
     public:
         // Constructor
         GooseBot() = default;
@@ -166,73 +168,71 @@ class GooseBot : public sc2::Agent {
         // Optimize vespene worker counts
         bool GooseBot::TryHarvestVespene();
         // Determine whether we have enough units to send a wave
-        // Doesn't send a wave if one is in progress
+        // --Doesn't send a wave if one is in progress
         bool GooseBot::ArmyReady();
 
-
+    /***********
+     * Private variables
+    ************/
     private:
 
         // vector of pointers to structures the bot has built
         Units built_structs;
+        // Number of bases the bot currently has - used to update other caps
         size_t num_bases;
-        size_t num_desired_bases;
-        size_t num_desired_extractors;
 
-        // Initial
-        size_t drone_cap = 14;
+        // Max desired units for each army unit
         size_t queen_cap;
-        size_t overlord_cap = 1;
         size_t zergl_cap;
         size_t roach_cap;
         size_t mutal_cap;
         size_t banel_cap;
         size_t ultra_cap;
 
+        // Actions currently in progress
         std::unordered_set<ABILITY_ID> pendingOrders;
 
+        // Upgrades completed
         std::vector<UPGRADE_ID> upgraded;
 
+        // Counter for build phasing
         size_t build_phase = 1;
-        bool saving_for_building; 
+        // Structures the bot has already built
         std::vector<UNIT_TYPEID> built_types;
-
-        //size_t army_phase = 1;
-        bool saving_for_army;
-
-        size_t research_phase = 1;
-        bool saving_for_research;
       
+        // Next structural unit to be built
         UNIT_TYPEID target_struct;
-        ABILITY_ID builder_ability;
-        UNIT_TYPEID builder;
-        size_t phase = 0;
         
         // Unit Filter Vectors for Observation.GetUnits()
         const std::vector<UNIT_TYPEID> vespeneTypes = { UNIT_TYPEID::NATURALGAS, UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER, UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER };
         const std::vector<UNIT_TYPEID> mineralTypes = { UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD, UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750, UNIT_TYPEID::NEUTRAL_MINERALFIELD, UNIT_TYPEID::NEUTRAL_MINERALFIELD450, UNIT_TYPEID::NEUTRAL_MINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 };
-        const std::vector<UNIT_TYPEID> resourceTypes = { UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD, UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750, UNIT_TYPEID::NEUTRAL_MINERALFIELD, UNIT_TYPEID::NEUTRAL_MINERALFIELD450, UNIT_TYPEID::NEUTRAL_MINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750, UNIT_TYPEID::NATURALGAS, UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER, UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER };
         const std::vector<UNIT_TYPEID> townHallTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::PROTOSS_NEXUS, UNIT_TYPEID::TERRAN_COMMANDCENTER };
         const std::vector<UNIT_TYPEID> baseTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::ZERG_LAIR, UNIT_TYPEID::ZERG_HIVE };
 
-
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
-        const std::vector<Point2D> &possibleBaseGrounds = {};
+        std::vector<Point2D> possibleBaseGrounds;
+        // Stores the potential spawn locations for enemy forces
         std::vector<Point2D> enemyStartLocations;
 
-
+        // Unit storage for associated purposes
         Units army;
-        Units defense;
         Units melee;
+        // Initial caps for unit waves
         size_t melee_cap = 6;
         size_t army_cap = 20;
+        // Stores pointers to found enemy bases
         Units enemy_base;
+        // Helper to determine endgame
         Point2D last_base = Point2D(0,0);
+        // Whether enemy base is found yet
         bool EnemyLocated = false;
 
-
+        // Trackers for different categories of Overlord scouts
+        // --Updated when a scout is destroyed
         std::vector<std::pair<int, const Unit*>> generalScouts = {};
         std::vector<std::pair<int, const Unit*>> suicideScouts = {};
 
+        // Desired build order with matching ability needed per structure
         using BuildPair = std::pair<UNIT_TYPEID, ABILITY_ID>;
         const std::vector<BuildPair> struct_targets = { 
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
@@ -244,6 +244,8 @@ class GooseBot : public sc2::Agent {
             //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
             } ;                // 7
         
+        // Filter matching build order for updating which units bot has built, 
+        // --used in Observatin()->GetUnits(IsUnits(this))
         const std::vector<UNIT_TYPEID> struct_filter = {
             UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
