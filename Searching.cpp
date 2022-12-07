@@ -1,16 +1,30 @@
 #include "GooseBot.h"
-//DEV BRANCH 
-// Very simple for now.
+/*******************
+ * This file contains functions for scouting & locating units
+********************/
+
+/// <summary>
+/// simple scout
+/// </summary>
+/// <param name="unit"></param>
 void GooseBot::scout(const Unit* unit){
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, /*possibleBaseGrounds[0]*/GetRandomEntry(enemyStartLocations));
 }
 
-// Go to a point 
+/// <summary>
+/// Send scout to a given point 
+/// </summary>
+/// <param name="unit"></param>
+/// <param name="point"></param>
 void GooseBot::scoutPoint(const Unit* unit, Point2D point){
     Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_MOVE, point);
 }
 
-// returns random unit of given type
+/// <summary>
+/// returns random unit of given type
+/// </summary>
+/// <param name="unit_type"></param>
+/// <returns>const Unit* unit</returns>
 const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
     auto all_of_type = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
     if (all_of_type.size() != 0){
@@ -20,7 +34,13 @@ const Unit *GooseBot::FindUnit(UNIT_TYPEID unit_type){
     }
 }
 
-// returns whether a given unit is within a given proximity to another unit
+/// <summary>
+/// returns whether a given unit is within a given proximity to another unit
+/// </summary>
+/// <param name="proximity"></param>
+/// <param name="unit1"></param>
+/// <param name="unit2"></param>
+/// <returns></returns>
 bool GooseBot::UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const
 {
     Point2D unit1Pos = unit1.pos;
@@ -28,12 +48,19 @@ bool GooseBot::UnitsWithinProximity(float proximity, const Unit& unit1, const Un
     return Distance2D(unit1Pos, unit2Pos) < proximity;
 }
 
-// return all mineral patches
+/// <summary>
+/// return all mineral patches
+/// </summary>
+/// <returns>const Units mineral patches</returns>
 const Units GooseBot::FindAllMineralPatches(){
     return Observation()->GetUnits(Unit::Alliance::Neutral, IsUnits(mineralTypes));
 }
 
-// returns pointer to nearest mineral patch
+/// <summary>
+/// returns pointer to nearest mineral patch
+/// </summary>
+/// <param name="start"></param>
+/// <returns>const Unit * target </returns>
 const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
     Units units = FindAllMineralPatches();
     float distance = std::numeric_limits<float>::max();
@@ -50,7 +77,12 @@ const Unit* GooseBot::FindNearestMineralPatch(const Point2D& start) {
     return target;
 }
 
-// FOR MULTI UNIT TYPES- returns a pointer to the closest of a selection of allied unit types
+/// <summary>
+/// FOR MULTI UNIT TYPES- returns a pointer to the closest of a selection of allied unit types
+/// </summary>
+/// <param name="target_units"></param>
+/// <param name="start"></param>
+/// <returns>const Unit* target</returns>
 const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, const Point2D& start) {
     Units units = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(target_units));
     float distance = std::numeric_limits<float>::max();
@@ -70,7 +102,12 @@ const Unit* GooseBot::FindNearestAllied(std::vector<UNIT_TYPEID> target_units, c
     return target;
 }
 
-// FOR SINGLE UNIT TYPE - returns a pointer to the nearest allied unit type
+/// <summary>
+/// FOR SINGLE UNIT TYPE - returns a pointer to the nearest allied unit type
+/// </summary>
+/// <param name="target_unit"></param>
+/// <param name="start"></param>
+/// <returns>const Unit* target</returns>
 const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& start) {
     Units units = Observation()->GetUnits(Unit::Alliance::Self);
     float distance = std::numeric_limits<float>::max();
@@ -92,7 +129,10 @@ const Unit* GooseBot::FindNearestAllied(UNIT_TYPEID target_unit, const Point2D& 
     return target;
 }
 
-// Only run in OnStart! 
+/// <summary>
+/// Only run in OnStart! Finds all possible base building grounds
+/// </summary>
+/// <returns>const std::vector&lt;Point2D&gt; centroids</returns>
 const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
 {
     // Initialize each centroid to be the position of a geyser in a pair of 2 closests geysers, discarding the other (there are 2 geysers per base location)
@@ -217,7 +257,11 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
     }
     return centroids;
 }
-
+/// <summary>
+/// Finds the closest vespene geyser
+/// </summary>
+/// <param name="start"></param>
+/// <returns>const Unit* closestGeyser</returns>
 const Unit* GooseBot::FindNearestVespeneGeyser(const Point2D& start){
     float max_distance = 15.0f;
     Units geysers = Observation()->GetUnits(Unit::Alliance::Neutral, IsUnits(vespeneTypes));
@@ -233,7 +277,11 @@ const Unit* GooseBot::FindNearestVespeneGeyser(const Point2D& start){
 	}
     return closestGeyser;
 }
-
+/// <summary>
+/// Finds the closest enemy unit
+/// </summary>
+/// <param name="start"></param>
+/// <returns>const Unit* closestEnemy</returns>
 const Unit* GooseBot::FindNearestEnemy(const Point2D& start) {
     float max_distance = 45.0f;
     Units enemies = Observation()->GetUnits(Unit::Alliance::Enemy);
