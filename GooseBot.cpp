@@ -62,14 +62,15 @@ void GooseBot::OnStep() {
         std::cout << "Research Phase" << std::endl;
         return;
     }
-    if (ArmyPhase()){ 
-        std::cout << "Army Phase " << std::endl;
-        return;
-    }
     if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
+        return;
+    }
+
     
 }
 
@@ -231,6 +232,25 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
                 generalScouts.erase(scoutIt);
             }
         }
+        // case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+        //     auto ug = std::find(upgraded.begin(), upgraded.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (ug != upgraded.end()){
+        //         upgraded.erase(ug);
+        //     }
+        //     for (auto st : built_structs){
+        //         if (st->)
+        //     }
+        //     auto st = std::find(built_structs.begin(), built_structs.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (st != built_structs.end()){
+        //         upgraded.erase(st);
+        //     }
+        // }
+        // case UNIT_TYPEID::ZERG_ROACHWARREN:
+        // case UNIT_TYPEID::ZERG_BANELINGNEST:
+        // case UNIT_TYPEID::ZERG_SPIRE:
+        // case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+
+
     }
 }
 
