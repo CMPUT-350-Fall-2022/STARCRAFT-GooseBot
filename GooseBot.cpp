@@ -3,7 +3,7 @@
 
 void GooseBot::OnGameStart()
 { 
-    possibleBaseGrounds = FindBaseBuildingGrounds();
+    const_cast<std::vector<Point2D> &>(possibleBaseGrounds) = FindBaseBuildingGrounds();
     enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
 
@@ -47,6 +47,7 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
+    TryBuildHatchery();
     // Make sure pendingOrders are current
     VerifyPending();
     HandleBases();
@@ -70,6 +71,7 @@ void GooseBot::OnStep() {
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
+    
     
 }
 

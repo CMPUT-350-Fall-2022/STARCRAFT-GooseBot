@@ -146,7 +146,7 @@ class GooseBot : public sc2::Agent {
 
 
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
-        std::vector<Point2D> possibleBaseGrounds;
+        const std::vector<Point2D> &possibleBaseGrounds = {};
         std::vector<Point2D> enemyStartLocations;
 
 

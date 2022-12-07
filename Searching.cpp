@@ -149,6 +149,37 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
         // On the 3rd pass, sort the centroids based on how suitable of a position they are for building a base
         if (i == 2)
         {
+            // For each cluster, find the two minerals/vespene points that are furthest from the current centroid and each other
+            for (auto &cluster : clusters)
+            {
+                auto resource_i = 0;
+                auto resource_j = 1;
+                auto maxDist_i = Distance2D(cluster.second[0]->pos, cluster.first);
+                auto maxDist_j = Distance2D(cluster.second[1]->pos, cluster.first);
+                if (maxDist_i < maxDist_j)
+                {
+                    auto temp = maxDist_i;
+                    maxDist_i = maxDist_j;
+                    maxDist_j = temp;
+                }
+                for (auto j = 2;  j < cluster.second.size();  ++j)
+                {
+                    auto &resource = cluster.second[j];
+                    auto dist = Distance2D(resource->pos, cluster.first);
+                    if (dist > maxDist_i)
+                    {
+                        maxDist_j = maxDist_i;
+                        maxDist_i = dist;
+                    }
+                    else if (dist > maxDist_j)
+                    {
+                        maxDist_j = dist;
+                    }
+                }
+                // newCentroid = the_two_points_added_together - oldCentroid
+                cluster.first = cluster.second[resource_i]->pos + cluster.second[resource_j]->pos - cluster.first;
+            }
+
             std::sort(clusters.begin(), clusters.end(), [&observation](std::pair<Point2D, std::vector<const Unit*>> cluster1, std::pair<Point2D, std::vector<const Unit*>> cluster2)
             {
                 auto c1Score = 0;
