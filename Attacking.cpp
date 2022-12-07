@@ -60,6 +60,7 @@ bool GooseBot::ArmyPhase(){
     if (EnemyLocated && !enemy_base.empty()) {
         
         if (ArmyReady()) {
+            ++wave_counter;
             Actions()->UnitCommand(army, ABILITY_ID::ATTACK, enemy_base.back());
             last_base = enemy_base.back()->pos;
         }
@@ -108,34 +109,22 @@ void GooseBot::VerifyArmyFocus() {
         ultra_cap = 5;  
     }else if (IsBuilt(UNIT_TYPEID::ZERG_SPIRE)) {
         zergl_cap = 10;
-        roach_cap = 10;
+        roach_cap = 15;
         mutal_cap = 28;
         banel_cap = 10;
         ultra_cap = 0;
     }else if (IsBuilt(UNIT_TYPEID::ZERG_ROACHWARREN)) {
-        zergl_cap = 20;
-        roach_cap = 40;
+        zergl_cap = 10;
+        roach_cap = 6;
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
     }else if (IsBuilt(UNIT_TYPEID::ZERG_SPAWNINGPOOL)) {
-        zergl_cap = 20;
+        zergl_cap = 10;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
     }
-
-    // else if (build_phase == 5 || build_phase == 6) {
-    //     zergl_cap = 10;
-    //     roach_cap = 10;
-    //     mutal_cap = 0;
-    //     banel_cap = 30;
-    //     ultra_cap = 0;
- 
-
-
-
-
-    //army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;
+    army_cap = (zergl_cap + roach_cap + mutal_cap)*2/3;
 }

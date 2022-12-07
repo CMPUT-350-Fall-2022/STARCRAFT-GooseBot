@@ -172,6 +172,8 @@ class GooseBot : public sc2::Agent {
         Units melee;
         size_t melee_cap = 6;
         size_t army_cap = 20;
+        size_t wave_counter = 0;
+        size_t ideal_waves = 0;
         Units enemy_base;
         Point2D last_base = Point2D(0,0);
         bool EnemyLocated = false;
@@ -185,20 +187,20 @@ class GooseBot : public sc2::Agent {
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
             //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
-            BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
+            //BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
             BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 5
             BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 6
-            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
             } ;                // 7
         
         const std::vector<UNIT_TYPEID> struct_units = {
             UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
             //UNIT_TYPEID::ZERG_HATCHERY, 
-            UNIT_TYPEID::ZERG_ROACHWARREN, 
+            //UNIT_TYPEID::ZERG_ROACHWARREN, 
             UNIT_TYPEID::ZERG_LAIR, 
-            UNIT_TYPEID::ZERG_SPIRE//,
-            //UNIT_TYPEID::ZERG_HATCHERY
+            UNIT_TYPEID::ZERG_SPIRE,
+            UNIT_TYPEID::ZERG_HATCHERY
             } ;
 
 };

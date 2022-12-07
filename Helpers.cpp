@@ -40,30 +40,30 @@ bool GooseBot::BuildPhase(){
     VerifyBuild();
     // Find the next item to build by iterating over desired structures,
     // setting the structure as next to build if we do not have it (or enough of it)
+    size_t expansion_tracker = 0;
     auto to_build = struct_targets.end();
     for (auto it = struct_targets.begin(); it < struct_targets.end(); ++it){
         auto found = std::find(built_types.begin(), built_types.end(), (*it).first);
         if (found == built_types.end()){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+                ++expansion_tracker;
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+                if (num_bases < expansion_tracker){
                     break;
                 }else{
                     continue;
                 }
             }else{
                 break;
-            }
+            } 
         }
     }// Build next structure based on its custom build function, if it has one
-    for (size_t j = 0; j < struct_targets.size(); ++j){
-        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
+    if (to_build != struct_targets.end()){
+
+        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < 2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
@@ -134,7 +134,7 @@ void GooseBot::SetDroneCap(){
 void GooseBot::SetQueenCap(){
     if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0
         && FindUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL)->build_progress == 1){
-        queen_cap = 2*num_bases;
+        queen_cap = num_bases;
     }
     else{
         queen_cap = 0;
