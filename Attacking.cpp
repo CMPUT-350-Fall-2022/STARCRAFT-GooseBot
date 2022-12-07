@@ -136,7 +136,7 @@ void GooseBot::VerifyArmyFocus() {
         zergl_cap = 32;
         roach_cap = 28;
         mutal_cap = 34;
-        banel_cap = 0;
+        banel_cap = 20;
         ultra_cap = 20;
         
     }
