@@ -132,6 +132,9 @@ bool GooseBot::TryBuildHatchery() {
 	Point2D buildSpot = possibleBaseGrounds.back();
 	// check if the point is between two geyesers
 	const Unit* close_geyser = FindNearestVespeneGeyser(buildSpot);
+	
+	if (close_geyser == nullptr) { return false; }
+
 	const Unit* far_geyser = FindNearestVespeneGeyser(close_geyser->pos);
 	if (close_geyser == nullptr || far_geyser == nullptr){
 		possibleBaseGrounds.pop_back();
