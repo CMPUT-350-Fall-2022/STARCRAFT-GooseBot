@@ -1,5 +1,15 @@
 #include "GooseBot.h"
+/*******************
+ * This file contains functions for building and morphing structures
+********************/
 
+/// <summary>
+/// Tries to morph a given structure at a give 2D point. By default worker_unit is a drone
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="location_point"></param>
+/// <param name="worker_unit"></param>
+/// <returns>BOOL true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
 	//get an observation of the current game state
 	const ObservationInterface* observation = Observation(); 
@@ -20,12 +30,11 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Po
 }
 
 /// <summary>
-/// Checks if there structur can be morphed, if true morphs/builds structure
-/// Requires preexisting unit to morph from
+/// Tries to morph a given structure at a give location Tag. By default worker_unit is a drone
 /// </summary>
 /// <param name="ability_type_for_structure"></param>
 /// <param name="location_tag"></param>
-/// <param name="unit_type"></param>
+/// <param name="worker_unit"></param>
 /// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID worker_unit) {
 	const ObservationInterface* observation = Observation(); 
@@ -82,9 +91,16 @@ bool GooseBot::TryMorphExtractor() {
 	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser->tag);
 }
 
-// from tutorial, adapted
-// Try to build a structure with given ability, struct type, 
-// & optional worker type[drone default], max num of structs desired[1 default] 
+/// <summary>
+/// from tutorial, adapted
+//  Try to build a structure with given ability, struct type, 
+//  & optional worker type[drone default], max num of structs desired[1 default] 
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="struct_type"></param>
+/// <param name="worker_type"></param>
+/// <param name="struct_cap"></param>
+/// <returns>BOOL, true if structure can be built, false otherwise</returns>
 bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type, size_t struct_cap) {
 	// If a unit already is building a supply structure of this type, do nothing.
 	// OR If we have the number of these we want already, do nothing
@@ -113,7 +129,10 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 	//std::cout << "failed placement query" << std::endl;
     return false;
 }
-
+/// <summary>
+/// Uses pre-computed potential base locations to try to build an expansion
+/// </summary>
+/// <returns>BOOL, true if success, false otherwise</returns>
 bool GooseBot::TryBuildHatchery() {
 	const Unit* unit_to_build = FindUnit(drone);
 	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
@@ -175,7 +194,10 @@ bool GooseBot::TryBuildHatchery() {
 	// return morphedHatchery;
 }
 
-//try to morph hatchery into lair
+/// <summary>
+/// try to morph hatchery into lair
+/// </summary>
+/// <returns>BOOL, true if TryMorphStructure call succeeds</returns>
 bool GooseBot::TryMorphLair() {
 	const Unit *base = GetMainBase();
 	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) || CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 1 
@@ -189,7 +211,10 @@ bool GooseBot::TryMorphLair() {
 	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
 }
 
-//try to morph lair into hive
+/// <summary>
+/// try to morph lair into hive
+/// </summary>
+/// <returns>BOOL, true if TryMorphStructure call succeeds</returns>
 bool GooseBot::TryMorphHive() {
 	const Unit *base = GetMainBase();
 	if (base==nullptr) {
@@ -203,6 +228,10 @@ bool GooseBot::TryMorphHive() {
 	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
 }
 
+/// <summary>
+/// Gets the first base we own from observation call
+/// </summary>
+/// <returns>const Unit* base</returns>
 const Unit* GooseBot::GetMainBase(){
 	const ObservationInterface* observation = Observation();
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
@@ -218,6 +247,10 @@ const Unit* GooseBot::GetMainBase(){
 	return GetRandomEntry(bases);
 }
 
+/// <summary>
+/// Gets the random base we own from observation call
+/// </summary>
+/// <returns>const Unit* base</returns>
 const Unit* GooseBot::GetNewerBase(){
 	const ObservationInterface* observation = Observation();
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
@@ -238,11 +271,19 @@ const Unit* GooseBot::GetNewerBase(){
 	}
 }
 
-//
+ /// <summary>
+ /// 
+ /// </summary>
+ /// <param name="observation"></param>
  void GooseBot::HandleBases(const ObservationInterface* observation){
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
 }
 
+/// <summary>
+/// Checks if structure has already been built
+/// </summary>
+/// <param name="unit"></param>
+/// <returns>BOOL, true if built, false otherwise</returns>
 bool GooseBot::IsBuilt(UNIT_TYPEID unit){
 	for (auto building : built_structs){
 		if (building->unit_type == unit){
