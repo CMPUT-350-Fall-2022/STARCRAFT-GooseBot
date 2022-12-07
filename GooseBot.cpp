@@ -90,10 +90,13 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
         {   //if our total number of workers is less than ideal at the nearest base
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
-            if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
-            {   //build a worker
-                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-                break;
+            if (base)
+            {
+                if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
+                {   //build a worker
+                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
+                    break;
+                }
             }
             if (mutal_count < mutal_cap)
             {
