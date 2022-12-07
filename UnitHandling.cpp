@@ -1,5 +1,4 @@
 #include "GooseBot.h"
-//DEV BRANCH
 
 // Distribute workers over vespene geysers for harvesting
 bool GooseBot::TryHarvestVespene() {

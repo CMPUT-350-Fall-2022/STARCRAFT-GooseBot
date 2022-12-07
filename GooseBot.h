@@ -27,11 +27,7 @@ using namespace sc2;
 
 // Base indicators
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
-#define lair UNIT_TYPEID::ZERG_LAIR
-#define hive UNIT_TYPEID::ZERG_HIVE
 #define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
-#define orbcomm UNIT_TYPEID::TERRAN_ORBITALCOMMAND
-#define orbcommf UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING
 #define nexus UNIT_TYPEID::PROTOSS_NEXUS
 #define gate UNIT_TYPEID::PROTOSS_GATEWAY
 #define pylon UNIT_TYPEID::PROTOSS_PYLON
@@ -237,24 +233,29 @@ class GooseBot : public sc2::Agent {
         const std::vector<BuildPair> struct_targets = { 
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
-            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
             BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
-            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 5
-            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 6
-            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
-            } ;                // 7
+            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
+            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
+            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 8
+            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 9
+            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 10
+            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 11
         
         // Filter matching build order for updating which units bot has built, 
         // --used in Observatin()->GetUnits(IsUnits(this))
         const std::vector<UNIT_TYPEID> struct_filter = {
             UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
-            //UNIT_TYPEID::ZERG_HATCHERY, 
+            UNIT_TYPEID::ZERG_HATCHERY, 
             UNIT_TYPEID::ZERG_ROACHWARREN, 
+            UNIT_TYPEID::ZERG_BANELINGNEST, 
             UNIT_TYPEID::ZERG_LAIR, 
-            UNIT_TYPEID::ZERG_SPIRE//,
-            //UNIT_TYPEID::ZERG_HATCHERY
-            } ;
+            UNIT_TYPEID::ZERG_SPIRE, 
+            UNIT_TYPEID::ZERG_INFESTATIONPIT, 
+            UNIT_TYPEID::ZERG_HIVE, 
+            UNIT_TYPEID::ZERG_ULTRALISKCAVERN} ;
 
 };
 #endif

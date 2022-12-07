@@ -1,5 +1,4 @@
 #include "GooseBot.h"
-//DEV BRANCH
 
 bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
     size_t z_ideal = 10, b_ideal = 10, r_ideal = 0, m_ideal = 0, q_ideal = 0;
@@ -25,7 +24,7 @@ bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
 }
 
 bool GooseBot::ArmyReady() {
-    if (army.size() >= army_cap && !actionPending(ABILITY_ID::ATTACK)) {
+    if (army.size() >= army_cap) {
         return true;
     }
     else {
@@ -99,41 +98,46 @@ void GooseBot::VerifyArmyFocus() {
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
-    } else if (IsBuilt(UNIT_TYPEID::ZERG_ULTRALISKCAVERN)) {
-        zergl_cap = 5;
-        roach_cap = 10;
-        mutal_cap = 14;
-        banel_cap = 0;
-        ultra_cap = 5;  
-    }else if (IsBuilt(UNIT_TYPEID::ZERG_SPIRE)) {
-        zergl_cap = 10;
-        roach_cap = 10;
-        mutal_cap = 28;
-        banel_cap = 10;
-        ultra_cap = 0;
-    }else if (IsBuilt(UNIT_TYPEID::ZERG_ROACHWARREN)) {
-        zergl_cap = 20;
-        roach_cap = 40;
-        mutal_cap = 0;
-        banel_cap = 0;
-        ultra_cap = 0;
-    }else if (IsBuilt(UNIT_TYPEID::ZERG_SPAWNINGPOOL)) {
+
+    }
+    else if (build_phase >= 2 && build_phase < 4) {
         zergl_cap = 20;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
+
     }
+    else if (build_phase == 4) {
+        zergl_cap = 20;
+        roach_cap = 40;
+        mutal_cap = 0;
+        banel_cap = 0;
+        ultra_cap = 0;
 
-    // else if (build_phase == 5 || build_phase == 6) {
-    //     zergl_cap = 10;
-    //     roach_cap = 10;
-    //     mutal_cap = 0;
-    //     banel_cap = 30;
-    //     ultra_cap = 0;
+    }
+    else if (build_phase == 5 || build_phase == 6) {
+        zergl_cap = 10;
+        roach_cap = 10;
+        mutal_cap = 0;
+        banel_cap = 30;
+        ultra_cap = 0;
  
+    }else if (build_phase >= 7 && build_phase < 10) {
+        zergl_cap = 10;
+        roach_cap = 10;
+        mutal_cap = 28;
+        banel_cap = 10;
+        ultra_cap = 0;
 
-
+    } else if (build_phase == 10) {
+        zergl_cap = 5;
+        roach_cap = 10;
+        mutal_cap = 10;
+        banel_cap = 0;
+        ultra_cap = 20;
+        
+    }
 
 
     //army_cap = (zergl_cap + roach_cap + mutal_cap + queen_cap)*2/3;

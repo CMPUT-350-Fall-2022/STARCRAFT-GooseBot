@@ -1,9 +1,8 @@
 #include "GooseBot.h"
-//DEV BRANCH
 
 void GooseBot::OnGameStart()
 { 
-    const_cast<std::vector<Point2D> &>(possibleBaseGrounds) = FindBaseBuildingGrounds();
+    possibleBaseGrounds = FindBaseBuildingGrounds();
     enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
 
@@ -47,34 +46,26 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
-    //TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
-
+    const ObservationInterface* obs = Observation();
     // Make sure pendingOrders are current
-    const ObservationInterface * obs = Observation();
     VerifyPending(obs);
     HandleBases(obs);
-    //Prioritize();
 
     if (TryHarvestVespene()) {
         return;
     }
-    // if (TryDistributeMineralWorkers()){
-    //     return;
-    // }
     if (ResearchPhase()){
-        std::cout << "Research Phase" << std::endl;
+        std::cout << "Research Phase " << std::endl;
+        return;
+    }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
         return;
     }
     if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
-    if (ArmyPhase()){ 
-        std::cout << "Army Phase " << std::endl;
-        return;
-    }
-    std::cout << "OnStep returned empty-handed" << std::endl;
-
     
 }
 
@@ -97,7 +88,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
-        {   //if our optimal workers at the nearest base is too low
+        {   //if our total number of workers is less than ideal at the nearest base
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
             if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
             {   //build a worker
@@ -166,7 +157,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
         {
             scoutPoint(unit, possibleBaseGrounds[((*scoutIt).first)++ % possibleBaseGrounds.size()]);
-        } else if (generalScouts.size() < 10)   // FIXME: Making it 10 prolly isn't the best solution to the hovering drones problem, but for now, should be ok.
+        } else if (generalScouts.size() < 4)
         {
             auto scout = std::make_pair(GetRandomInteger(0, possibleBaseGrounds.size() - 1), unit);
             generalScouts.push_back(scout);
@@ -237,25 +228,6 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
                 generalScouts.erase(scoutIt);
             }
         }
-        // case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
-        //     auto ug = std::find(upgraded.begin(), upgraded.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
-        //     if (ug != upgraded.end()){
-        //         upgraded.erase(ug);
-        //     }
-        //     for (auto st : built_structs){
-        //         if (st->)
-        //     }
-        //     auto st = std::find(built_structs.begin(), built_structs.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
-        //     if (st != built_structs.end()){
-        //         upgraded.erase(st);
-        //     }
-        // }
-        // case UNIT_TYPEID::ZERG_ROACHWARREN:
-        // case UNIT_TYPEID::ZERG_BANELINGNEST:
-        // case UNIT_TYPEID::ZERG_SPIRE:
-        // case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
-
-
     }
 }
 
@@ -281,13 +253,7 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         switch (unit->unit_type.ToType())
         {
         case commc:
-        case orbcomm:
-        case orbcommf:
-        case lair:
         case hatch:
-        case hive:
-        case pylon:
-        case gate:
         case nexus:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
@@ -325,14 +291,14 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 }
 
 void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
-    // switch (unit->unit_type.ToType()){
-    //     case default:
-    //     {
-            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsIdleLarva());
-            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_DRONE);
-     //       break;
-    //    }
-   // }
+    switch (unit->unit_type.ToType()){
+        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
+            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
+            TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+            break;
+        }
+    }
 
 }
 
@@ -347,10 +313,7 @@ void GooseBot::OnUnitCreated(const Unit* unit){
         case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
         {
             Units available_larva = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
-            if (available_larva.size() > 0)
-            {
-                Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
-            }
+            Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
         }
     }
     return;

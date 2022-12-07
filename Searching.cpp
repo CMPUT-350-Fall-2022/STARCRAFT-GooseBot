@@ -119,7 +119,7 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
     }
 
     // Group minerals and vespene into the cluster with the closest centroid
-    auto resources = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(resourceTypes));
+    auto resources = observation->GetUnits(Unit::Alliance::Neutral, IsUnits(mineralTypes));
     for (auto i = 0;  i < 3;  ++i)
     {   
         // Initialize clusters
@@ -150,43 +150,6 @@ const std::vector<Point2D> GooseBot::FindBaseBuildingGrounds()
         // On the 3rd pass, sort the centroids based on how suitable of a position they are for building a base
         if (i == 2)
         {
-            // For each cluster, find the two minerals/vespene points that are furthest from the current centroid and each other
-            for (auto &cluster : clusters)
-            {
-                auto resource_i = 0;
-                auto maxDist_i = Distance2D(cluster.second[0]->pos, cluster.first);
-                for (auto j = 1;  j < cluster.second.size();  ++j)
-                {
-                    auto &resource = cluster.second[j];
-                    auto dist = Distance2D(resource->pos, cluster.first);
-                    if (dist > maxDist_i)
-                    {
-                        resource_i = j;
-                        maxDist_i = dist;
-                    }
-                }
-
-                auto resource_j = 0;
-                auto maxDist_j = Distance2D(cluster.second[0]->pos, cluster.second[resource_i]->pos);
-                for (auto j = 1;  j < cluster.second.size();  ++j)
-                {
-                    auto &resource = cluster.second[j];
-                    auto dist = Distance2D(resource->pos, cluster.second[resource_i]->pos);
-                    if (dist > maxDist_j)
-                    {
-                        resource_j = j;
-                        maxDist_j = dist;
-                    }
-                }
-                auto r1r2 = cluster.second[resource_j]->pos - cluster.second[resource_i]->pos;
-                auto half_r1r2_dist = Distance3D(cluster.second[resource_j]->pos, cluster.second[resource_i]->pos) / 2;
-                Normalize3D(r1r2);
-                auto almostBetterCenter = (r1r2 * half_r1r2_dist) + cluster.second[resource_i]->pos;
-                cluster.first = almostBetterCenter - cluster.first;
-                Normalize2D(cluster.first);
-                cluster.first = (cluster.first * 4) + almostBetterCenter;
-            }
-
             std::sort(clusters.begin(), clusters.end(), [&observation](std::pair<Point2D, std::vector<const Unit*>> cluster1, std::pair<Point2D, std::vector<const Unit*>> cluster2)
             {
                 auto c1Score = 0;

@@ -1,6 +1,4 @@
 #include "GooseBot.h"
-//DEV BRANCH
-
 //return true if the action is pending, false otherwise
 bool GooseBot::actionPending(ABILITY_ID action){
 	return (std::find(pendingOrders.begin(), pendingOrders.end(), action) != pendingOrders.end());
@@ -47,7 +45,7 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+                if (num_bases < 4){
                     break;
                 }else{
                     continue;
@@ -61,9 +59,9 @@ bool GooseBot::BuildPhase(){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+            return TryBuildHatchery();
+        }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
@@ -132,7 +130,6 @@ void GooseBot::SetQueenCap(){
         queen_cap = 0;
     }
 }
-
 
 
 
