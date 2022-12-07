@@ -1,4 +1,5 @@
 #include "GooseBot.h"
+//DEV BRANCH
 
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
 	//get an observation of the current game state
@@ -119,60 +120,25 @@ bool GooseBot::TryBuildHatchery() {
 	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
 		|| !CanAfford(UNIT_TYPEID::ZERG_HATCHERY)
 		|| (unit_to_build == nullptr)){
+			std::cout << "Failed to find unit to build Hatchery" << std::endl;
 		return false;
 	}
-	const Unit* base = GetMainBase();
-	if (base==nullptr) {
-		return false;
-	}
-	if (possibleBaseGrounds.empty()){
-		return false;
-	}
-	// Iterator to base ground spot
-	Point2D buildSpot = possibleBaseGrounds.back();
-	// check if the point is between two geyesers
-	const Unit* close_geyser = FindNearestVespeneGeyser(buildSpot);
-	
-	if (close_geyser == nullptr) { return false; }
 
-	const Unit* far_geyser = FindNearestVespeneGeyser(close_geyser->pos);
-	if (close_geyser == nullptr || far_geyser == nullptr){
-		possibleBaseGrounds.pop_back();
-		return false;
-	}
-	if (Distance2D(far_geyser->pos, buildSpot) < Distance2D(close_geyser->pos, far_geyser->pos)){
-		// Check to see if worker can morph at target location
-		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, buildSpot)) {
+	for (auto &buildSpot : possibleBaseGrounds)
+	{
+		if (Query()->Placement(ABILITY_ID::BUILD_HATCHERY, buildSpot))
+		{
 			std::cout << "Trying to build Hatchery" << std::endl;
 			Actions()->UnitCommand(unit_to_build, ABILITY_ID::BUILD_HATCHERY, buildSpot);
 			return true;
-		}else {
-			possibleBaseGrounds.pop_back();
-			return false;
+		}
+		else
+		{
+			std::cout << "Failed to build Hatchery" << std::endl;
 		}
 	}
     // Query failed
     return false;
-
-	// int spotIndex = 0;
-    // Point2D buildSpot = possibleBaseGrounds[spotIndex];
-    // int breakCounter = 0;
-    // bool morphedHatchery;
-    // while (!(morphedHatchery = TryMorphStructure(ABILITY_ID::BUILD_HATCHERY, buildSpot))){
-    //     if (!(spotIndex < possibleBaseGrounds.size() - 1)){ 
-    //         break;
-    //     }
-    //     if (breakCounter >= 20){
-    //         spotIndex++;
-    //         buildSpot = possibleBaseGrounds[spotIndex];
-    //         breakCounter = 0;
-    //     }
-    //     else{
-    //         buildSpot += Point2D(GetRandomScalar() * 3, GetRandomScalar() * 3);
-    //         breakCounter++;
-    //     }
-    // }
-	// return morphedHatchery;
 }
 
 //try to morph hatchery into lair
@@ -239,12 +205,17 @@ const Unit* GooseBot::GetNewerBase(){
 }
 
 //
- void GooseBot::HandleBases(){
+ void GooseBot::HandleBases(const ObservationInterface* observation){
 	num_bases = 0;
-	const ObservationInterface* observation = Observation();
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
-	if (build_phase == 4|| build_phase == 8){
-		//TryDistributeMineralWorkers();
-	}	
 }
 
+
+bool GooseBot::IsBuilt(UNIT_TYPEID unit){
+	for (auto building : built_structs){
+		if (building->unit_type == unit){
+			return true;
+		}
+	}
+	return false;
+}
