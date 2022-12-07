@@ -63,12 +63,15 @@ bool GooseBot::BuildPhase(){
         }
     }// Build next structure based on its custom build function, if it has one
     //might need to verifybuild again
+    if (to_build == struct_targets.end()) {
+        return false;
+    }
     for (size_t j = 0; j < struct_targets.size(); ++j){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
          else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-            std::cout << "try to build hatchery" << std::endl;
+          
              return TryBuildHatchery();
          }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
@@ -81,6 +84,8 @@ bool GooseBot::BuildPhase(){
             return TryBuildStructure((*to_build).second, (*to_build).first);
         }
     }
+
+   
     return false;
 }
 
