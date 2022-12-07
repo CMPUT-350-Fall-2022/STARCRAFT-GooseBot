@@ -103,7 +103,7 @@ void GooseBot::VerifyArmyFocus() {
 
     }
     else if (build_phase >= 2 && build_phase < 4) {
-        zergl_cap = 20;
+        zergl_cap = 10;
         roach_cap = 0;
         mutal_cap = 0;
         banel_cap = 0;
@@ -111,31 +111,31 @@ void GooseBot::VerifyArmyFocus() {
 
     }
     else if (build_phase == 4) {
-        zergl_cap = 20;
-        roach_cap = 40;
+        zergl_cap = 18;
+        roach_cap = 12;
         mutal_cap = 0;
         banel_cap = 0;
         ultra_cap = 0;
 
     }
     else if (build_phase == 5 || build_phase == 6) {
-        zergl_cap = 10;
-        roach_cap = 10;
+        zergl_cap = 24;
+        roach_cap = 18;
         mutal_cap = 0;
-        banel_cap = 30;
+        banel_cap = 14;
         ultra_cap = 0;
  
     }else if (build_phase >= 7 && build_phase < 10) {
-        zergl_cap = 10;
-        roach_cap = 10;
+        zergl_cap = 30;
+        roach_cap = 24;
         mutal_cap = 28;
-        banel_cap = 10;
+        banel_cap = 18;
         ultra_cap = 0;
 
     } else if (build_phase == 10) {
-        zergl_cap = 5;
-        roach_cap = 10;
-        mutal_cap = 10;
+        zergl_cap = 32;
+        roach_cap = 28;
+        mutal_cap = 34;
         banel_cap = 0;
         ultra_cap = 20;
         
