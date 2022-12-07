@@ -53,15 +53,12 @@ void GooseBot::OnStep() {
     const ObservationInterface * obs = Observation();
     VerifyPending(obs);
     HandleBases(obs);
-    // Fix issue where overlords dont build soon enough
-    if (obs->GetFoodUsed() >= obs->GetFoodCap() - 1){
-        const Unit* baby = FindUnit(larva);
-        Actions()->UnitCommand(baby, ABILITY_ID::TRAIN_OVERLORD);
-    }
+    //Prioritize();
+
     if (TryHarvestVespene()) {
         return;
     }
-    // if (TryBuildHatchery()){
+    // if (TryDistributeMineralWorkers()){
     //     return;
     // }
     if (ResearchPhase()){
@@ -76,6 +73,8 @@ void GooseBot::OnStep() {
         std::cout << "Army Phase " << std::endl;
         return;
     }
+    std::cout << "OnStep returned empty-handed" << std::endl;
+
     
 }
 
@@ -97,35 +96,33 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     case larva:
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
-        if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 3))
+        if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
         {   //if our optimal workers at the nearest base is too low
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
             if (base)
             {
-                if ((base->ideal_harvesters - 2 >= base->assigned_harvesters))     
+                if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
                 {   //build a worker
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                     break;
                 }
             }
-            if (wave_counter <= ideal_waves){
-                if (mutal_count < mutal_cap)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-                    break;
-                }
+            if (mutal_count < mutal_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                break;
+            }
 
-                if (roach_count < roach_cap)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
-                    break;
-                }
-                    //if our zergling count is less than or equal to 10
-                if (zergl_count < zergl_cap)
-                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
+            if (roach_count < roach_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
+                break;
+            }
+                //if our zergling count is less than or equal to 10
+            if (zergl_count < zergl_cap)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
             }
            
         }else{

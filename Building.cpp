@@ -206,8 +206,8 @@ const Unit* GooseBot::GetNewerBase(){
 
 //
  void GooseBot::HandleBases(const ObservationInterface* observation){
+	num_bases = 0;
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
-	ideal_waves = num_bases - 1;
 }
 
 
