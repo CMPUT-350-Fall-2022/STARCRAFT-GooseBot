@@ -1,6 +1,14 @@
 #include "GooseBot.h"
-//DEV BRANCH
 
+/// <summary>
+/// TO BE REMOVED???
+/// </summary>
+/// <param name="z"></param>
+/// <param name="b"></param>
+/// <param name="r"></param>
+/// <param name="m"></param>
+/// <param name="q"></param>
+/// <returns></returns>
 bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
     size_t z_ideal = 10, b_ideal = 10, r_ideal = 0, m_ideal = 0, q_ideal = 0;
     for (size_t i = 0; i < 5; i++)
@@ -23,7 +31,10 @@ bool checkConditions(size_t z, size_t b, size_t r, size_t m, size_t q) {
     }
     return true;
 }
-
+/// <summary>
+/// Returns whether army is large enough to attack
+/// </summary>
+/// <returns></returns>
 bool GooseBot::ArmyReady() {
     if (army.size() >= army_cap && !actionPending(ABILITY_ID::ATTACK)) {
         return true;
@@ -34,6 +45,11 @@ bool GooseBot::ArmyReady() {
     }
 }
 
+/// <summary>
+///  Tries to execute army functions, returns true if one executes successfully
+///  [Called once in OnStep()]
+/// </summary>
+/// <returns></returns>
 bool GooseBot::ArmyPhase(){
     SetDroneCap();
     SetQueenCap();
@@ -77,6 +93,10 @@ bool GooseBot::ArmyPhase(){
     return false;
 }
 
+/// <summary>
+/// Resets army vectors
+/// Called once in ArmyPhase()
+/// </summary>
 void GooseBot::VerifyArmy(){
     army.clear();
     melee.clear();
@@ -92,6 +112,10 @@ void GooseBot::VerifyArmy(){
     
 }
 
+/// <summary>
+/// Resets army caps based on build phase
+/// Called once in ArmyPhase()
+/// </summary>
 void GooseBot::VerifyArmyFocus() {
 
     if (build_phase == 1) {
