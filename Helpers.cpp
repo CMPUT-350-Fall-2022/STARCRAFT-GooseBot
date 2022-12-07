@@ -61,9 +61,9 @@ bool GooseBot::BuildPhase(){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+            return TryBuildHatchery();
+        }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }

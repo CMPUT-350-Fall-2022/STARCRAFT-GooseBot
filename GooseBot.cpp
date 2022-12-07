@@ -47,7 +47,7 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
-    TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
+    // TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
 
     // Make sure pendingOrders are current
     const ObservationInterface * obs = Observation();
