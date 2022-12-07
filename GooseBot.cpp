@@ -50,28 +50,32 @@ void GooseBot::OnStep() {
     //TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
 
     // Make sure pendingOrders are current
-    VerifyPending();
-    HandleBases();
+    const ObservationInterface * obs = Observation();
+    VerifyPending(obs);
+    HandleBases(obs);
     //Prioritize();
 
     if (TryHarvestVespene()) {
         return;
     }
-    if (TryDistributeMineralWorkers()){
-        return;
-    }
+    // if (TryDistributeMineralWorkers()){
+    //     return;
+    // }
     if (ResearchPhase()){
-        std::cout << "Research Phase " << std::endl;
-        return;
-    }
-    if (ArmyPhase()){ 
-        std::cout << "Army Phase " << std::endl;
+        std::cout << "Research Phase" << std::endl;
         return;
     }
     if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
+        return;
+    }
+    std::cout << "OnStep returned empty-handed" << std::endl;
+
+    
 }
 
 
@@ -93,8 +97,9 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
-        {   //if our total number of workers is less than 30
-            if ((drone_count < drone_cap))     
+        {   //if our optimal workers at the nearest base is too low
+            const Unit *base = FindNearestAllied(baseTypes, unit->pos);
+            if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
@@ -119,7 +124,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
            
         }else{
             //spawns overlord to increase supply cap when we need supply increase
-            VerifyPending();
+            VerifyPending(observation);
             if (build_phase > 2 && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
             {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
@@ -232,6 +237,25 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
                 generalScouts.erase(scoutIt);
             }
         }
+        // case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+        //     auto ug = std::find(upgraded.begin(), upgraded.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (ug != upgraded.end()){
+        //         upgraded.erase(ug);
+        //     }
+        //     for (auto st : built_structs){
+        //         if (st->)
+        //     }
+        //     auto st = std::find(built_structs.begin(), built_structs.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (st != built_structs.end()){
+        //         upgraded.erase(st);
+        //     }
+        // }
+        // case UNIT_TYPEID::ZERG_ROACHWARREN:
+        // case UNIT_TYPEID::ZERG_BANELINGNEST:
+        // case UNIT_TYPEID::ZERG_SPIRE:
+        // case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+
+
     }
 }
 
@@ -257,7 +281,13 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         switch (unit->unit_type.ToType())
         {
         case commc:
+        case orbcomm:
+        case orbcommf:
+        case lair:
         case hatch:
+        case hive:
+        case pylon:
+        case gate:
         case nexus:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
@@ -295,18 +325,14 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 }
 
 void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
-    switch (unit->unit_type.ToType()){
-        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
-            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
-            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
-            TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
-            break;
-        }
-        case UNIT_TYPEID::ZERG_HATCHERY:{
-            TryDistributeMineralWorkers();
-            break;
-        }
-    }
+    // switch (unit->unit_type.ToType()){
+    //     case default:
+    //     {
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsIdleLarva());
+            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_DRONE);
+     //       break;
+    //    }
+   // }
 
 }
 

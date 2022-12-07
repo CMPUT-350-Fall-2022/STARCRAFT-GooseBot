@@ -205,12 +205,17 @@ const Unit* GooseBot::GetNewerBase(){
 }
 
 //
- void GooseBot::HandleBases(){
+ void GooseBot::HandleBases(const ObservationInterface* observation){
 	num_bases = 0;
-	const ObservationInterface* observation = Observation();
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
-	if (build_phase == 4|| build_phase == 8){
-		//TryDistributeMineralWorkers();
-	}	
 }
 
+
+bool GooseBot::IsBuilt(UNIT_TYPEID unit){
+	for (auto building : built_structs){
+		if (building->unit_type == unit){
+			return true;
+		}
+	}
+	return false;
+}
