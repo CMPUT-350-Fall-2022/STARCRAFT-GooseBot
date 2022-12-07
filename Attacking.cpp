@@ -1,7 +1,7 @@
 #include "GooseBot.h"
 
 /// <summary>
-/// TO BE REMOVED???
+/// TODO: BE REMOVED???
 /// </summary>
 /// <param name="z"></param>
 /// <param name="b"></param>
