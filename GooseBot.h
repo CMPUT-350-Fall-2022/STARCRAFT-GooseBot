@@ -25,9 +25,17 @@ using namespace sc2;
 #define roach UNIT_TYPEID::ZERG_ROACH
 #define mutal UNIT_TYPEID::ZERG_MUTALISK
 #define ultra UNIT_TYPEID::ZERG_ULTRALISK
+//all base indicators?
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
+#define lair UNIT_TYPEID::ZERG_LAIR
+#define hive UNIT_TYPEID::ZERG_HIVE
 #define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
+#define orbcomm UNIT_TYPEID::TERRAN_ORBITALCOMMAND
+#define orbcommf UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING
 #define nexus UNIT_TYPEID::PROTOSS_NEXUS
+#define gate UNIT_TYPEID::PROTOSS_GATEWAY
+#define pylon UNIT_TYPEID::PROTOSS_PYLON
+
 
 class GooseBot : public sc2::Agent {
 
