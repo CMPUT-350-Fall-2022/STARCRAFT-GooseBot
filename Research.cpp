@@ -55,3 +55,7 @@ bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGR
         return false;
     }
 }
+
+bool GooseBot::IsUpgraded(UPGRADE_ID to_test){
+    return (std::find(upgraded.begin(), upgraded.end(), to_test) != upgraded.end());
+}

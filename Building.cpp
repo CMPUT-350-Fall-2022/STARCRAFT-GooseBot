@@ -243,3 +243,11 @@ const Unit* GooseBot::GetNewerBase(){
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
 }
 
+bool GooseBot::IsBuilt(UNIT_TYPEID unit){
+	for (auto building : built_structs){
+		if (building->unit_type == unit){
+			return true;
+		}
+	}
+	return false;
+}
