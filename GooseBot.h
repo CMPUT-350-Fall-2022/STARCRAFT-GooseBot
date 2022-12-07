@@ -182,24 +182,29 @@ class GooseBot : public sc2::Agent {
         using BuildPair = std::pair<UNIT_TYPEID, ABILITY_ID>;
         const std::vector<BuildPair> struct_targets = { 
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
-            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
-            BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),             // 4
-            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
+            BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
+            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),            // 4
+
             BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 5
             BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 6
-            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
+            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
             } ;                // 7
         
         const std::vector<UNIT_TYPEID> struct_units = {
             UNIT_TYPEID::ZERG_HATCHERY,
+            UNIT_TYPEID::ZERG_HATCHERY,
+            UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
-            //UNIT_TYPEID::ZERG_HATCHERY, 
+            UNIT_TYPEID::ZERG_HATCHERY, 
             UNIT_TYPEID::ZERG_ROACHWARREN, 
             UNIT_TYPEID::ZERG_BANELINGNEST,
             UNIT_TYPEID::ZERG_LAIR, 
-            UNIT_TYPEID::ZERG_SPIRE//,
-            //UNIT_TYPEID::ZERG_HATCHERY
+            UNIT_TYPEID::ZERG_SPIRE,
+            UNIT_TYPEID::ZERG_HATCHERY
             } ;
 
 };

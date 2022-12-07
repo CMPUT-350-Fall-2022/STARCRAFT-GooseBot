@@ -47,7 +47,7 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+                if (num_bases < 5){
                     break;
                 }else{
                     continue;
