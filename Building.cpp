@@ -129,7 +129,10 @@ bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYP
 	//std::cout << "failed placement query" << std::endl;
     return false;
 }
-
+/// <summary>
+/// Uses pre-computed potential base locations to try to build an expansion
+/// </summary>
+/// <returns>BOOL, true if success, false otherwise</returns>
 bool GooseBot::TryBuildHatchery() {
 	const Unit* unit_to_build = FindUnit(drone);
 	if (actionPending(ABILITY_ID::BUILD_HATCHERY) 
@@ -156,7 +159,10 @@ bool GooseBot::TryBuildHatchery() {
     return false;
 }
 
-//try to morph hatchery into lair
+/// <summary>
+/// try to morph hatchery into lair
+/// </summary>
+/// <returns>BOOL, true if TryMorphStructure call succeeds</returns>
 bool GooseBot::TryMorphLair() {
 	const Unit *base = GetMainBase();
 	if (base == nullptr || !CanAfford(UNIT_TYPEID::ZERG_LAIR) || CountUnitType(UNIT_TYPEID::ZERG_LAIR) == 1 
@@ -170,7 +176,10 @@ bool GooseBot::TryMorphLair() {
 	return TryMorphStructure(ABILITY_ID::MORPH_LAIR, base->tag, base->unit_type);	
 }
 
-//try to morph lair into hive
+/// <summary>
+/// try to morph lair into hive
+/// </summary>
+/// <returns>BOOL, true if TryMorphStructure call succeeds</returns>
 bool GooseBot::TryMorphHive() {
 	const Unit *base = GetMainBase();
 	if (base==nullptr) {
@@ -184,6 +193,10 @@ bool GooseBot::TryMorphHive() {
 	return TryMorphStructure(ABILITY_ID::MORPH_HIVE, base->tag, base->unit_type);	
 }
 
+/// <summary>
+/// Gets the first base we own from observation call
+/// </summary>
+/// <returns>const Unit* base</returns>
 const Unit* GooseBot::GetMainBase(){
 	const ObservationInterface* observation = Observation();
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
@@ -199,6 +212,10 @@ const Unit* GooseBot::GetMainBase(){
 	return GetRandomEntry(bases);
 }
 
+/// <summary>
+/// Gets the random base we own from observation call
+/// </summary>
+/// <returns>const Unit* base</returns>
 const Unit* GooseBot::GetNewerBase(){
 	const ObservationInterface* observation = Observation();
 	Units bases = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
@@ -219,13 +236,20 @@ const Unit* GooseBot::GetNewerBase(){
 	}
 }
 
-//
+ /// <summary>
+ /// 
+ /// </summary>
+ /// <param name="observation"></param>
  void GooseBot::HandleBases(const ObservationInterface* observation){
 	num_bases = 0;
 	num_bases = observation->GetUnits(Unit::Alliance::Self, IsUnits(baseTypes)).size();
 }
 
-
+/// <summary>
+/// Checks if structure has already been built
+/// </summary>
+/// <param name="unit"></param>
+/// <returns>BOOL, true if built, false otherwise</returns>
 bool GooseBot::IsBuilt(UNIT_TYPEID unit){
 	for (auto building : built_structs){
 		if (building->unit_type == unit){
