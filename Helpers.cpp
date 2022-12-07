@@ -47,7 +47,8 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+                ++expansion_count;
+                if (num_bases < expansion_count){
                     break;
                 }else{
                     continue;
@@ -56,14 +57,20 @@ bool GooseBot::BuildPhase(){
                 break;
             }
         }
+        else {
+            built_types.erase(found);
+
+        }
     }// Build next structure based on its custom build function, if it has one
+    //might need to verifybuild again
     for (size_t j = 0; j < struct_targets.size(); ++j){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
+         else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+            std::cout << "try to build hatchery" << std::endl;
+             return TryBuildHatchery();
+         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
