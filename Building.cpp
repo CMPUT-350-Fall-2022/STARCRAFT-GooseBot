@@ -1,6 +1,15 @@
 #include "GooseBot.h"
-//DEV BRANCH
+/*******************
+ * This file contains functions for building and morphing structures
+********************/
 
+/// <summary>
+/// Tries to morph a given structure at a give 2D point. By default worker_unit is a drone
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="location_point"></param>
+/// <param name="worker_unit"></param>
+/// <returns>BOOL true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Point2D& location_point, UNIT_TYPEID worker_unit) {
 	//get an observation of the current game state
 	const ObservationInterface* observation = Observation(); 
@@ -21,12 +30,11 @@ bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, const Po
 }
 
 /// <summary>
-/// Checks if there structur can be morphed, if true morphs/builds structure
-/// Requires preexisting unit to morph from
+/// Tries to morph a given structure at a give location Tag. By default worker_unit is a drone
 /// </summary>
 /// <param name="ability_type_for_structure"></param>
 /// <param name="location_tag"></param>
-/// <param name="unit_type"></param>
+/// <param name="worker_unit"></param>
 /// <returns>BOOL, true if structure can be morphed from unit, false otherwise</returns>
 bool GooseBot::TryMorphStructure(ABILITY_ID ability_type_for_structure, Tag location_tag, UNIT_TYPEID worker_unit) {
 	const ObservationInterface* observation = Observation(); 
@@ -83,9 +91,16 @@ bool GooseBot::TryMorphExtractor() {
 	return TryMorphStructure(ABILITY_ID::BUILD_EXTRACTOR, closestGeyser->tag);
 }
 
-// from tutorial, adapted
-// Try to build a structure with given ability, struct type, 
-// & optional worker type[drone default], max num of structs desired[1 default] 
+/// <summary>
+/// from tutorial, adapted
+//  Try to build a structure with given ability, struct type, 
+//  & optional worker type[drone default], max num of structs desired[1 default] 
+/// </summary>
+/// <param name="ability_type_for_structure"></param>
+/// <param name="struct_type"></param>
+/// <param name="worker_type"></param>
+/// <param name="struct_cap"></param>
+/// <returns>BOOL, true if structure can be built, false otherwise</returns>
 bool GooseBot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID struct_type, UNIT_TYPEID worker_type, size_t struct_cap) {
 	// If a unit already is building a supply structure of this type, do nothing.
 	// OR If we have the number of these we want already, do nothing
