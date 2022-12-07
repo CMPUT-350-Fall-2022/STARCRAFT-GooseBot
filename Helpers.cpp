@@ -56,16 +56,14 @@ bool GooseBot::BuildPhase(){
                 }
             }else{
                 break;
-            }
+            } 
         }
     }// Build next structure based on its custom build function, if it has one
-    for (size_t j = 0; j < struct_targets.size(); ++j){
-        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
+    if (to_build != struct_targets.end()){
+
+        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < 2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
@@ -136,7 +134,7 @@ void GooseBot::SetDroneCap(){
 void GooseBot::SetQueenCap(){
     if (CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0
         && FindUnit(UNIT_TYPEID::ZERG_SPAWNINGPOOL)->build_progress == 1){
-        queen_cap = 2*num_bases;
+        queen_cap = num_bases;
     }
     else{
         queen_cap = 0;
