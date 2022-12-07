@@ -47,7 +47,7 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
-    //TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
+    TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
 
     // Make sure pendingOrders are current
     const ObservationInterface * obs = Observation();
@@ -155,7 +155,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         {
             scoutPoint(unit, enemyStartLocations[((*scoutIt).first)++ % enemyStartLocations.size()]);
             break;
-        } else if (suicideScouts.size() < 2)
+        } else if (suicideScouts.size() < 0)
         {
             auto scout = std::make_pair(GetRandomInteger(0, enemyStartLocations.size() - 1), unit);
             suicideScouts.push_back(scout);
@@ -166,9 +166,9 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
         {
             scoutPoint(unit, possibleBaseGrounds[((*scoutIt).first)++ % possibleBaseGrounds.size()]);
-        } else if (generalScouts.size() < 10)   // FIXME: Making it 10 prolly isn't the best solution to the hovering drones problem, but for now, should be ok.
+        } else if (generalScouts.size() < 1)   // FIXME: Making it 10 prolly isn't the best solution to the hovering drones problem, but for now, should be ok.
         {
-            auto scout = std::make_pair(GetRandomInteger(0, possibleBaseGrounds.size() - 1), unit);
+            auto scout = std::make_pair(0/*GetRandomInteger(0, possibleBaseGrounds.size() - 1)*/, unit);
             generalScouts.push_back(scout);
             scoutPoint(unit, possibleBaseGrounds[scout.first]);
         } else
