@@ -95,8 +95,9 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
-        {   //if our total number of workers is less than 30
-            if ((drone_count < drone_cap))     
+        {   //if our optimal workers at the nearest base is too low
+            const Unit *base = FindNearestAllied(baseTypes, unit->pos);
+            if ((base->ideal_harvesters - base->assigned_harvesters - 2 < 0))     
             {   //build a worker
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                 break;
@@ -324,7 +325,6 @@ void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
             break;
         }
         case UNIT_TYPEID::ZERG_HATCHERY:{
-            TryDistributeMineralWorkers();
             break;
         }
     }

@@ -102,7 +102,6 @@ class GooseBot : public sc2::Agent {
         const Unit* FindNearestEnemy(const Point2D& start);
 
         bool GooseBot::TryHarvestVespene();
-        bool GooseBot::TryDistributeMineralWorkers();
 
         Point2D GooseBot::getEnemyLocation();
         Units GooseBot::getArmy();
