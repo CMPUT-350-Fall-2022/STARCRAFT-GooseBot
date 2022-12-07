@@ -21,7 +21,7 @@ void GooseBot::VerifyPending(){
 
 void GooseBot::VerifyBuild(){
     build_phase = 0;
-    Units built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
+    built_structs = Observation()->GetUnits(Unit::Alliance::Self, IsUnits(struct_units));
     built_types.clear();
     for (auto s : built_structs){
         built_types.push_back(s->unit_type);

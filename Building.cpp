@@ -246,3 +246,12 @@ const Unit* GooseBot::GetNewerBase(){
 	}	
 }
 
+
+bool GooseBot::IsBuilt(UNIT_TYPEID unit){
+	for (auto building : built_structs){
+		if (building->unit_type == unit){
+			return true;
+		}
+	}
+	return false;
+}

@@ -77,6 +77,10 @@ class GooseBot : public sc2::Agent {
         bool ArmyPhase();
 
         bool ResearchPhase();
+        bool IsUpgraded(UPGRADE_ID upgrade);
+        bool IsBuilt(UNIT_TYPEID unit);
+        Units built_structs;
+
 
         void VerifyPending();
         void VerifyArmy();

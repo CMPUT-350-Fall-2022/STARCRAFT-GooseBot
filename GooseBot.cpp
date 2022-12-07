@@ -59,7 +59,7 @@ void GooseBot::OnStep() {
         return;
     }
     if (ResearchPhase()){
-        std::cout << "Research Phase " << std::endl;
+        std::cout << "Research Phase" << std::endl;
         return;
     }
     if (ArmyPhase()){ 
