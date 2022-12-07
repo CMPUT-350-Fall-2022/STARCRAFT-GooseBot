@@ -47,7 +47,8 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
-    TryBuildHatchery();
+    //TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
+
     // Make sure pendingOrders are current
     VerifyPending();
     HandleBases();
@@ -71,8 +72,6 @@ void GooseBot::OnStep() {
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
-    
-    
 }
 
 
@@ -162,7 +161,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
         if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
         {
             scoutPoint(unit, possibleBaseGrounds[((*scoutIt).first)++ % possibleBaseGrounds.size()]);
-        } else if (generalScouts.size() < 4)
+        } else if (generalScouts.size() < 10)   // FIXME: Making it 10 prolly isn't the best solution to the hovering drones problem, but for now, should be ok.
         {
             auto scout = std::make_pair(GetRandomInteger(0, possibleBaseGrounds.size() - 1), unit);
             generalScouts.push_back(scout);
@@ -322,7 +321,10 @@ void GooseBot::OnUnitCreated(const Unit* unit){
         case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
         {
             Units available_larva = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
-            Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
+            if (available_larva.size() > 0)
+            {
+                Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
+            }
         }
     }
     return;
