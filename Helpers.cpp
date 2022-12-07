@@ -8,9 +8,8 @@ bool GooseBot::actionPending(ABILITY_ID action){
 
 
 //get the pending orders for the game step
-void GooseBot::VerifyPending(){
+void GooseBot::VerifyPending(const ObservationInterface* observation){
 	pendingOrders.clear();
-	const ObservationInterface* observation = Observation();
 	Units workers = observation->GetUnits(Unit::Alliance::Self);
 	for (const auto& worker : workers) {
 		for (const auto& order : worker->orders) {
@@ -48,7 +47,7 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 4){
+                if (num_bases < 1){
                     break;
                 }else{
                     continue;
@@ -62,9 +61,9 @@ bool GooseBot::BuildPhase(){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-            return TryBuildHatchery();
-        }
+        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+        //     return TryBuildHatchery();
+        // }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
@@ -159,6 +158,7 @@ void GooseBot::SetSavingsFalse(){
     saving_for_building = false;
     saving_for_research = false;
 }
+
 
 
 
