@@ -1,4 +1,7 @@
 #include "GooseBot.h"
+/*******************
+ * This file contains functions for handling attack units and attacks
+********************/
 
 /// <summary>
 /// TODO: BE REMOVED???
