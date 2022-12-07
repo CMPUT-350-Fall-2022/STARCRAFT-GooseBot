@@ -279,7 +279,13 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         switch (unit->unit_type.ToType())
         {
         case commc:
+        case orbcomm:
+        case orbcommf:
+        case lair:
         case hatch:
+        case hive:
+        case pylon:
+        case gate:
         case nexus:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
