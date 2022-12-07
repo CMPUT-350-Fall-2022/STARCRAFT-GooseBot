@@ -323,17 +323,14 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 }
 
 void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
-    switch (unit->unit_type.ToType()){
-        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
-            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
-            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
-            TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
-            break;
-        }
-        case UNIT_TYPEID::ZERG_HATCHERY:{
-            break;
-        }
-    }
+    // switch (unit->unit_type.ToType()){
+    //     case default:
+    //     {
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsIdleLarva());
+            Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_DRONE);
+     //       break;
+    //    }
+   // }
 
 }
 

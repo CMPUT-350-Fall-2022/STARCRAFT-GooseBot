@@ -36,6 +36,10 @@ using namespace sc2;
 #define gate UNIT_TYPEID::PROTOSS_GATEWAY
 #define pylon UNIT_TYPEID::PROTOSS_PYLON
 
+struct IsIdleLarva {
+    IsIdleLarva(){};
+    bool operator()(const Unit& unit) { return (unit.unit_type == UNIT_TYPEID::ZERG_LARVA && unit.orders.empty()); };
+};
 
 class GooseBot : public sc2::Agent {
 
