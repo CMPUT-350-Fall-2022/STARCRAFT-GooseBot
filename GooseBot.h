@@ -70,7 +70,7 @@ class GooseBot : public sc2::Agent {
         void scoutPoint(const Unit* unit, Point2D point);
 
         bool BuildPhase();
-        void HandleBases();
+        void HandleBases(const ObservationInterface* observation);
         void SetDroneCap();
         void SetQueenCap();
 
@@ -82,11 +82,12 @@ class GooseBot : public sc2::Agent {
         Units built_structs;
 
 
-        void VerifyPending();
+        void VerifyPending(const ObservationInterface* observation);
         void VerifyArmy();
         void VerifyArmyFocus();
         void VerifyBuild();
         void Prioritize();
+        
 
         // Return true if two units are within a certain distance of each other
         bool UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const;
@@ -171,27 +172,22 @@ class GooseBot : public sc2::Agent {
         const std::vector<BuildPair> struct_targets = { 
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // Build phase 1
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
-            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
+            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
             BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
-            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
-            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
-            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
-            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 8
-            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 9
-            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 10
-            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 11
+            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 5
+            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 6
+            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
+            } ;                // 7
         
         const std::vector<UNIT_TYPEID> struct_units = {
             UNIT_TYPEID::ZERG_HATCHERY,
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
-            UNIT_TYPEID::ZERG_HATCHERY, 
+            //UNIT_TYPEID::ZERG_HATCHERY, 
             UNIT_TYPEID::ZERG_ROACHWARREN, 
-            UNIT_TYPEID::ZERG_BANELINGNEST, 
             UNIT_TYPEID::ZERG_LAIR, 
-            UNIT_TYPEID::ZERG_SPIRE, 
-            UNIT_TYPEID::ZERG_INFESTATIONPIT, 
-            UNIT_TYPEID::ZERG_HIVE, 
-            UNIT_TYPEID::ZERG_ULTRALISKCAVERN} ;
+            UNIT_TYPEID::ZERG_SPIRE//,
+            //UNIT_TYPEID::ZERG_HATCHERY
+            } ;
 
 };
 #endif

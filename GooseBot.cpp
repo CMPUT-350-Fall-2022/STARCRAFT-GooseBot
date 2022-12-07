@@ -48,16 +48,17 @@ void GooseBot::OnGameEnd()
 
 void GooseBot::OnStep() {
     // Make sure pendingOrders are current
-    VerifyPending();
-    HandleBases();
+    const ObservationInterface * obs = Observation();
+    VerifyPending(obs);
+    HandleBases(obs);
     //Prioritize();
 
     if (TryHarvestVespene()) {
         return;
     }
-    if (TryDistributeMineralWorkers()){
-        return;
-    }
+    // if (TryDistributeMineralWorkers()){
+    //     return;
+    // }
     if (ResearchPhase()){
         std::cout << "Research Phase" << std::endl;
         return;
@@ -70,6 +71,7 @@ void GooseBot::OnStep() {
         std::cout << "Army Phase " << std::endl;
         return;
     }
+    std::cout << "OnStep returned empty-handed" << std::endl;
 
     
 }
@@ -119,7 +121,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
            
         }else{
             //spawns overlord to increase supply cap when we need supply increase
-            VerifyPending();
+            VerifyPending(observation);
             if (build_phase > 2 && !(actionPending(ABILITY_ID::TRAIN_OVERLORD)))
             {
                 Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
