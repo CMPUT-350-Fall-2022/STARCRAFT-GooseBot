@@ -73,7 +73,7 @@ void GooseBot::OnStep() {
         std::cout << "Army Phase " << std::endl;
         return;
     }
-    std::cout << "OnStep returned empty-handed" << std::endl;
+   
 
     
 }
@@ -331,7 +331,7 @@ void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
     // switch (unit->unit_type.ToType()){
     //     case default:
     //     {
-            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsIdleLarva());
+            Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
             Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_DRONE);
      //       break;
     //    }
@@ -345,16 +345,18 @@ void GooseBot::OnUnitCreated(const Unit* unit){
         case UNIT_TYPEID::ZERG_EXTRACTOR:
         case UNIT_TYPEID::ZERG_ROACHWARREN:
         case UNIT_TYPEID::ZERG_BANELINGNEST:
-        case UNIT_TYPEID::ZERG_HATCHERY:
         case UNIT_TYPEID::ZERG_INFESTATIONPIT:
         case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+        case UNIT_TYPEID::ZERG_HATCHERY:
         {
             Units available_larva = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
             if (available_larva.size() > 0)
             {
                 Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
             }
-        }
+        }        
+        
+        
     }
     return;
 }
