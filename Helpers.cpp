@@ -37,9 +37,12 @@ void GooseBot::VerifyBuild(){
 bool GooseBot::BuildPhase(){
     // OnUnitCreated could be keeping this updated?
     // but for now / in case of structural destruction or other mishap
+    
     VerifyBuild();
+    HandleBases(Observation());
     // Find the next item to build by iterating over desired structures,
     // setting the structure as next to build if we do not have it (or enough of it)
+    size_t army_count = army.size();
     auto to_build = struct_targets.end();
     for (auto it = struct_targets.begin(); it < struct_targets.end(); ++it){
         auto found = std::find(built_types.begin(), built_types.end(), (*it).first);
@@ -47,23 +50,38 @@ bool GooseBot::BuildPhase(){
             to_build = it;
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
-                if (num_bases < 1){
+       
+                if (num_bases < 2){
                     break;
-                }else{
+                }
+
+                else{
                     continue;
                 }
             }else{
                 break;
             }
+  
+        }
+        else {
+            built_types.erase(found);
+
         }
     }// Build next structure based on its custom build function, if it has one
+    //might need to verifybuild again
+    if (to_build == struct_targets.end()) {
+        return false;
+    }
     for (size_t j = 0; j < struct_targets.size(); ++j){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
+         else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+          
+            
+             return TryBuildHatchery();
+            
+         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
@@ -74,6 +92,8 @@ bool GooseBot::BuildPhase(){
             return TryBuildStructure((*to_build).second, (*to_build).first);
         }
     }
+
+   
     return false;
 }
 
