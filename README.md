@@ -16,7 +16,7 @@ Download and install [Visual Studio 2019](https://www.visualstudio.com/downloads
 
 ```bat
 :: Clone the project
-$ git clone --recursive https://github.com/laingkob/STARCRAFT-GooseBot.git
+$ git clone --recursive https://github.com/CMPUT-350-Fall-2022/STARCRAFT-GooseBot.git
 $ cd STARCRAFT-GooseBot
 
 :: Create build directory.

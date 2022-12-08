@@ -24,19 +24,18 @@ using namespace sc2;
 #define roach UNIT_TYPEID::ZERG_ROACH
 #define mutal UNIT_TYPEID::ZERG_MUTALISK
 #define ultra UNIT_TYPEID::ZERG_ULTRALISK
-
-// Base indicators
+//all base indicators?
 #define hatch UNIT_TYPEID::ZERG_HATCHERY
+#define lair UNIT_TYPEID::ZERG_LAIR
+#define hive UNIT_TYPEID::ZERG_HIVE
 #define commc UNIT_TYPEID::TERRAN_COMMANDCENTER
+#define orbcomm UNIT_TYPEID::TERRAN_ORBITALCOMMAND
+#define orbcommf UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING
 #define nexus UNIT_TYPEID::PROTOSS_NEXUS
 #define gate UNIT_TYPEID::PROTOSS_GATEWAY
 #define pylon UNIT_TYPEID::PROTOSS_PYLON
 
-// Filter for finding idle larva
-struct IsIdleLarva {
-    IsIdleLarva(){};
-    bool operator()(const Unit& unit) { return (unit.unit_type == UNIT_TYPEID::ZERG_LARVA && unit.orders.empty()); };
-};
+class GooseBot : public sc2::Agent {
 
 // Bot Class
 class GooseBot : public sc2::Agent {
@@ -120,7 +119,9 @@ class GooseBot : public sc2::Agent {
         // Sends a unit to scout a given point
         void scoutPoint(const Unit* unit, Point2D point);
 
-        // Decides max number of queens needed
+        bool BuildPhase();
+        void HandleBases();
+        void SetDroneCap();
         void SetQueenCap();
 
         // Handles Queens and sending waves of units depending on built structures
@@ -128,20 +129,13 @@ class GooseBot : public sc2::Agent {
 
         // Handles order of upgrades, researches next upgrade if available
         bool ResearchPhase();
-        // Checks whether the bot has completed an upgrade already
-        bool IsUpgraded(UPGRADE_ID upgrade);
-        // Checks whether the bot possesses a desired structure
-        // --Only works for structures filtered by struct_filter
-        bool IsBuilt(UNIT_TYPEID unit);
 
-        // Iterates over the bot's units' actions to update pendingOrders
-        void VerifyPending(const ObservationInterface* observation);
-        // Clears and re-fills bot's army and melee trackers with attack units
+        void VerifyPending();
         void VerifyArmy();
         // Sets army unit caps based on built structures
         void VerifyArmyFocus();
-        // Verifies which structures the bot currently has
-        void VerifyBuild();        
+        void VerifyBuild();
+        void Prioritize();
 
         // Return true if two units are within a certain distance of each other
         bool UnitsWithinProximity(float proximity, const Unit& unit1, const Unit& unit2) const;
@@ -163,8 +157,10 @@ class GooseBot : public sc2::Agent {
 
         // Optimize vespene worker counts
         bool GooseBot::TryHarvestVespene();
-        // Determine whether we have enough units to send a wave
-        // --Doesn't send a wave if one is in progress
+        bool GooseBot::TryDistributeMineralWorkers();
+
+        Point2D GooseBot::getEnemyLocation();
+        Units GooseBot::getArmy();
         bool GooseBot::ArmyReady();
 
     /***********
@@ -202,12 +198,34 @@ class GooseBot : public sc2::Agent {
         // Unit Filter Vectors for Observation.GetUnits()
         const std::vector<UNIT_TYPEID> vespeneTypes = { UNIT_TYPEID::NATURALGAS, UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER, UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER };
         const std::vector<UNIT_TYPEID> mineralTypes = { UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD, UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750, UNIT_TYPEID::NEUTRAL_MINERALFIELD, UNIT_TYPEID::NEUTRAL_MINERALFIELD450, UNIT_TYPEID::NEUTRAL_MINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750 };
-        const std::vector<UNIT_TYPEID> townHallTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::PROTOSS_NEXUS, UNIT_TYPEID::TERRAN_COMMANDCENTER };
+        const std::vector<UNIT_TYPEID> resourceTypes = { UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD, UNIT_TYPEID::NEUTRAL_BATTLESTATIONMINERALFIELD750, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD, UNIT_TYPEID::NEUTRAL_LABMINERALFIELD750, UNIT_TYPEID::NEUTRAL_MINERALFIELD, UNIT_TYPEID::NEUTRAL_MINERALFIELD450, UNIT_TYPEID::NEUTRAL_MINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERMINERALFIELD750, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_PURIFIERRICHMINERALFIELD750, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD, UNIT_TYPEID::NEUTRAL_RICHMINERALFIELD750, UNIT_TYPEID::NATURALGAS, UNIT_TYPEID::NEUTRAL_PROTOSSVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER, UNIT_TYPEID::NEUTRAL_PURIFIERVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_RICHVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SHAKURASVESPENEGEYSER, UNIT_TYPEID::NEUTRAL_SPACEPLATFORMGEYSER };
         const std::vector<UNIT_TYPEID> baseTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::ZERG_LAIR, UNIT_TYPEID::ZERG_HIVE };
+        const std::vector<UNIT_TYPEID> enemyBaseTypes = { UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::ZERG_LAIR, UNIT_TYPEID::ZERG_HIVE,
+                                                          UNIT_TYPEID::TERRAN_COMMANDCENTER, UNIT_TYPEID::TERRAN_COMMANDCENTERFLYING,
+                                                          UNIT_TYPEID::TERRAN_ORBITALCOMMAND, UNIT_TYPEID::TERRAN_ORBITALCOMMANDFLYING,
+                                                          UNIT_TYPEID::TERRAN_PLANETARYFORTRESS, UNIT_TYPEID::PROTOSS_NEXUS };
+        const std::vector<UNIT_TYPEID> buildingTypes = {
+            // ZERG
+            UNIT_TYPEID::ZERG_HATCHERY, UNIT_TYPEID::ZERG_LAIR, UNIT_TYPEID::ZERG_HIVE, UNIT_TYPEID::ZERG_EXTRACTOR,
+            UNIT_TYPEID::ZERG_EXTRACTORRICH, UNIT_TYPEID::ZERG_SPAWNINGPOOL, UNIT_TYPEID::ZERG_SPINECRAWLER,
+            UNIT_TYPEID::ZERG_SPINECRAWLERUPROOTED, UNIT_TYPEID::ZERG_SPORECRAWLER, UNIT_TYPEID::ZERG_SPORECRAWLERUPROOTED,
+            UNIT_TYPEID::ZERG_EVOLUTIONCHAMBER, UNIT_TYPEID::ZERG_ROACHWARREN, UNIT_TYPEID::ZERG_BANELINGNEST,
+            UNIT_TYPEID::ZERG_HYDRALISKDEN, UNIT_TYPEID::ZERG_LURKERDENMP, UNIT_TYPEID::ZERG_SPIRE, UNIT_TYPEID::ZERG_GREATERSPIRE,
+            UNIT_TYPEID::ZERG_NYDUSNETWORK, UNIT_TYPEID::ZERG_NYDUSCANAL, UNIT_TYPEID::ZERG_INFESTATIONPIT, UNIT_TYPEID::ZERG_ULTRALISKCAVERN,
+            UNIT_TYPEID::ZERG_CREEPTUMOR, UNIT_TYPEID::ZERG_CREEPTUMORBURROWED, UNIT_TYPEID::ZERG_CREEPTUMORQUEEN,
+
+
+            // PROTOSS
+            UNIT_TYPEID::PROTOSS_NEXUS, UNIT_TYPEID::PROTOSS_PYLON, UNIT_TYPEID::PROTOSS_PYLONOVERCHARGED,
+            UNIT_TYPEID::PROTOSS_ASSIMILATOR, UNIT_TYPEID::PROTOSS_ASSIMILATORRICH, UNIT_TYPEID::PROTOSS_GATEWAY,
+            UNIT_TYPEID::PROTOSS_WARPGATE, UNIT_TYPEID::PROTOSS_FORGE, UNIT_TYPEID::PROTOSS_CYBERNETICSCORE,
+            UNIT_TYPEID::PROTOSS_PHOTONCANNON, UNIT_TYPEID::PROTOSS_SHIELDBATTERY, UNIT_TYPEID::PROTOSS_ROBOTICSBAY,
+            UNIT_TYPEID::PROTOSS_ROBOTICSFACILITY, UNIT_TYPEID::PROTOSS_STARGATE, UNIT_TYPEID::PROTOSS_TWILIGHTCOUNCIL,
+            UNIT_TYPEID::PROTOSS_FLEETBEACON, UNIT_TYPEID::PROTOSS_TEMPLARARCHIVE, UNIT_TYPEID::PROTOSS_DARKSHRINE,
+            UNIT_TYPEID::PROTOSS_ORACLESTASISTRAP };
 
         // Stores possible places that bases can be built after FindBaseBuildingGrounds() is called in OnStart()
         std::vector<Point2D> possibleBaseGrounds;
-        // Stores the potential spawn locations for enemy forces
         std::vector<Point2D> enemyStartLocations;
 
         // Unit storage for associated purposes
@@ -223,10 +241,10 @@ class GooseBot : public sc2::Agent {
         // Whether enemy base is found yet
         bool EnemyLocated = false;
 
-        // Trackers for different categories of Overlord scouts
-        // --Updated when a scout is destroyed
+
         std::vector<std::pair<int, const Unit*>> generalScouts = {};
         std::vector<std::pair<int, const Unit*>> suicideScouts = {};
+        std::vector<std::pair<Point2D, const Unit*>> generalScouts = {};
 
         // Desired build order with matching ability needed per structure
         using BuildPair = std::pair<UNIT_TYPEID, ABILITY_ID>;
@@ -235,13 +253,10 @@ class GooseBot : public sc2::Agent {
             BuildPair(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::BUILD_SPAWNINGPOOL),          // 2
             BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 3
             BuildPair(UNIT_TYPEID::ZERG_ROACHWARREN, ABILITY_ID::BUILD_ROACHWARREN),            // 4
-            BuildPair(UNIT_TYPEID::ZERG_BANELINGNEST, ABILITY_ID::BUILD_BANELINGNEST),          // 5
-            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 6
-            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 7
-            BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY),                  // 8
-            BuildPair(UNIT_TYPEID::ZERG_INFESTATIONPIT, ABILITY_ID::BUILD_INFESTATIONPIT),      // 9
-            BuildPair(UNIT_TYPEID::ZERG_HIVE, ABILITY_ID::MORPH_HIVE),                          // 10
-            BuildPair(UNIT_TYPEID::ZERG_ULTRALISKCAVERN, ABILITY_ID::BUILD_ULTRALISKCAVERN)} ;  // 11
+            BuildPair(UNIT_TYPEID::ZERG_LAIR, ABILITY_ID::MORPH_LAIR),                          // 5
+            BuildPair(UNIT_TYPEID::ZERG_SPIRE, ABILITY_ID::BUILD_SPIRE),                        // 6
+            //BuildPair(UNIT_TYPEID::ZERG_HATCHERY, ABILITY_ID::BUILD_HATCHERY)
+            } ;                // 7
         
         // Filter matching build order for updating which units bot has built, 
         // --used in Observatin()->GetUnits(IsUnits(this))
@@ -250,12 +265,10 @@ class GooseBot : public sc2::Agent {
             UNIT_TYPEID::ZERG_SPAWNINGPOOL,
             UNIT_TYPEID::ZERG_HATCHERY, 
             UNIT_TYPEID::ZERG_ROACHWARREN, 
-            UNIT_TYPEID::ZERG_BANELINGNEST, 
             UNIT_TYPEID::ZERG_LAIR, 
-            UNIT_TYPEID::ZERG_SPIRE, 
-            UNIT_TYPEID::ZERG_INFESTATIONPIT, 
-            UNIT_TYPEID::ZERG_HIVE, 
-            UNIT_TYPEID::ZERG_ULTRALISKCAVERN} ;
+            UNIT_TYPEID::ZERG_SPIRE//,
+            //UNIT_TYPEID::ZERG_HATCHERY
+            } ;
 
 };
 #endif

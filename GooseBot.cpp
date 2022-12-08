@@ -1,10 +1,12 @@
 #include "GooseBot.h"
+//DEV BRANCH
 
 void GooseBot::OnGameStart()
 { 
-    possibleBaseGrounds = FindBaseBuildingGrounds();
+    const_cast<std::vector<Point2D> &>(possibleBaseGrounds) = FindBaseBuildingGrounds();
     enemyStartLocations = Observation()->GetGameInfo().enemy_start_locations;
     const ObservationInterface* observation = Observation();
+    baseGroundsIt = possibleBaseGrounds.begin();
 
     //reserve space in vectors
     army.reserve(100);
@@ -46,26 +48,34 @@ void GooseBot::OnGameEnd()
 
 
 void GooseBot::OnStep() {
-    const ObservationInterface* obs = Observation();
+    //TryBuildHatchery();   // Uncomment for "All your base are belong to us *honk*"
+
     // Make sure pendingOrders are current
+    const ObservationInterface * obs = Observation();
     VerifyPending(obs);
     HandleBases(obs);
+    //Prioritize();
 
     if (TryHarvestVespene()) {
         return;
     }
+    // if (TryDistributeMineralWorkers()){
+    //     return;
+    // }
     if (ResearchPhase()){
-        std::cout << "Research Phase " << std::endl;
-        return;
-    }
-    if (ArmyPhase()){ 
-        std::cout << "Army Phase " << std::endl;
+        std::cout << "Research Phase" << std::endl;
         return;
     }
     if (BuildPhase()){
         std::cout << "Build Phase " << build_phase << std::endl;
         return;        
     }
+    if (ArmyPhase()){ 
+        std::cout << "Army Phase " << std::endl;
+        return;
+    }
+   
+
     
 }
 
@@ -88,11 +98,18 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     {
         //while our supply limit is less than or equal to our supply limit cap - 1      Note: changed to if because i can't see why we need a while in a callback, also, was probably causing unexpected behavior with the breaks. change this back if it was actually needed.
         if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2)
-        {   //if our total number of workers is less than ideal at the nearest base
+<<<<<<<<< Temporary merge branch 1
+        {   //if our total number of workers is less than 30
+            if ((drone_count < drone_cap))     
+            {   //build a worker
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
+                break;
+=========
+        {   //if our optimal workers at the nearest base is too low
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
             if (base)
             {
-                if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
+                if ((base->ideal_harvesters >= base->assigned_harvesters - 2))     
                 {   //build a worker
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                     break;
@@ -145,11 +162,13 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
     case overl:
     {
         std::_Vector_iterator<std::_Vector_val<std::_Simple_types<std::pair<int, const sc2::Unit *>>>> scoutIt;
+        auto enemy_buildings = observation->GetUnits(Unit::Alliance::Enemy, IsUnits(buildingTypes));
         if ((scoutIt = std::find_if(suicideScouts.begin(), suicideScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != suicideScouts.end())
         {
             scoutPoint(unit, enemyStartLocations[((*scoutIt).first)++ % enemyStartLocations.size()]);
             break;
-        } else if (suicideScouts.size() < 2)
+        }
+        else if (suicideScouts.size() < 2 && enemy_buildings.empty())
         {
             auto scout = std::make_pair(GetRandomInteger(0, enemyStartLocations.size() - 1), unit);
             suicideScouts.push_back(scout);
@@ -157,17 +176,39 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             break;
         }
 
-        if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+        std::vector<std::pair<sc2::Point2D, const sc2::Unit *>>::iterator generalScoutsIt;
+        if ((generalScoutsIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<Point2D, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+        {
+            if (Distance2D((*generalScoutsIt).second->pos, (*generalScoutsIt).first) > 3)
+            {
+                scoutPoint((*generalScoutsIt).second, (*generalScoutsIt).first);
+            }
+            break;
+        }
+        else if (generalScouts.size() < possibleBaseGrounds.size())
+        {
+            auto scout = std::make_pair(*baseGroundsIt, unit);
+            generalScouts.push_back(scout);
+            scoutPoint(unit, scout.first);
+            baseGroundsIt++;
+            if (baseGroundsIt == possibleBaseGrounds.end())
+            {
+                baseGroundsIt = possibleBaseGrounds.begin();
+            }
+            break;
+        }
+
+        if ((scoutIt = std::find_if(mobileScouts.begin(), mobileScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != mobileScouts.end())
         {
             scoutPoint(unit, possibleBaseGrounds[((*scoutIt).first)++ % possibleBaseGrounds.size()]);
-        } else if (generalScouts.size() < 4)
+            break;
+        }
+        else
         {
             auto scout = std::make_pair(GetRandomInteger(0, possibleBaseGrounds.size() - 1), unit);
-            generalScouts.push_back(scout);
+            mobileScouts.push_back(scout);
             scoutPoint(unit, possibleBaseGrounds[scout.first]);
-        } else
-        {
-            Actions()->UnitCommand(unit, ABILITY_ID::GENERAL_PATROL, possibleBaseGrounds[0]);   // TODO: Make non-scouting overlords more useful than this, which just makes them pace back and forth over the base.
+            break;
         }
         break;
     }
@@ -226,11 +267,40 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
         case overl:
         {
             std::_Vector_iterator<std::_Vector_val<std::_Simple_types<std::pair<int, const sc2::Unit *>>>> scoutIt;
-            if ((scoutIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+            std::vector<std::pair<sc2::Point2D, const sc2::Unit *>>::iterator generalScoutsIt;
+            if ((scoutIt = std::find_if(mobileScouts.begin(), mobileScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != mobileScouts.end())
             {
-                generalScouts.erase(scoutIt);
+                mobileScouts.erase(scoutIt);
             }
+            else if ((scoutIt = std::find_if(suicideScouts.begin(), suicideScouts.end(), [unit](std::pair<int, const Unit*> scout){ return scout.second == unit; })) != suicideScouts.end())
+            {
+                suicideScouts.erase(scoutIt);
+            }
+            else if ((generalScoutsIt = std::find_if(generalScouts.begin(), generalScouts.end(), [unit](std::pair<Point2D, const Unit*> scout){ return scout.second == unit; })) != generalScouts.end())
+            {
+                generalScouts.erase(generalScoutsIt);
+            }
+            break;
         }
+        // case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+        //     auto ug = std::find(upgraded.begin(), upgraded.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (ug != upgraded.end()){
+        //         upgraded.erase(ug);
+        //     }
+        //     for (auto st : built_structs){
+        //         if (st->)
+        //     }
+        //     auto st = std::find(built_structs.begin(), built_structs.end(), UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+        //     if (st != built_structs.end()){
+        //         upgraded.erase(st);
+        //     }
+        // }
+        // case UNIT_TYPEID::ZERG_ROACHWARREN:
+        // case UNIT_TYPEID::ZERG_BANELINGNEST:
+        // case UNIT_TYPEID::ZERG_SPIRE:
+        // case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+
+
     }
 }
 
@@ -238,6 +308,31 @@ void GooseBot::OnUnitDestroyed(const Unit* unit)
 void GooseBot::OnUnitEnterVision(const Unit* unit) {
     const ObservationInterface* observation = Observation();
     Point2D last_seen = unit->pos;
+
+    auto enemy_buildings = observation->GetUnits(Unit::Alliance::Enemy, IsUnits(buildingTypes));
+    if (!enemy_buildings.empty())
+    {
+        auto overlords = observation->GetUnits(Unit::Alliance::Self, IsUnit(overl));
+        auto mainBase = GetMainBase();
+        if (mainBase)
+        {
+            auto overlord = FindNearestAllied(overl, unit->pos);
+            if (overlord)
+            {
+                scoutPoint(overlord, mainBase->pos);
+            }
+            // for (auto &overlord : overlords)
+            // {
+            //     scoutPoint(overlord, mainBase->pos);
+            // } 
+        }
+        
+        if (std::find(enemy_base.begin(), enemy_base.end(), unit) == enemy_base.end())
+        {
+            enemy_base.push_back(unit);
+        }
+        EnemyLocated = true;
+    }
     
     
         //uint32_t army_count = observation->GetArmyCount();
@@ -256,7 +351,13 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
         switch (unit->unit_type.ToType())
         {
         case commc:
+        case orbcomm:
+        case orbcommf:
+        case lair:
         case hatch:
+        case hive:
+        case pylon:
+        case gate:
         case nexus:
         {
             //Actions()->UnitCommand(zergls, ABILITY_ID::ATTACK, last_seen);
@@ -294,11 +395,16 @@ void GooseBot::OnUnitEnterVision(const Unit* unit) {
 }
 
 void GooseBot::OnBuildingConstructionComplete(const Unit* unit){
-    switch (unit->unit_type.ToType()){
-        case UNIT_TYPEID::ZERG_SPAWNINGPOOL:{
+    // switch (unit->unit_type.ToType()){
+    //     case default:
+    //     {
             Units larva_pool = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
             Actions()->UnitCommand(larva_pool, ABILITY_ID::TRAIN_ZERGLING);
             TryResearch(UNIT_TYPEID::ZERG_SPAWNINGPOOL, ABILITY_ID::RESEARCH_ZERGLINGMETABOLICBOOST, UPGRADE_ID::ZERGLINGMOVEMENTSPEED);
+            break;
+        }
+        case UNIT_TYPEID::ZERG_HATCHERY:{
+            TryDistributeMineralWorkers();
             break;
         }
     }
@@ -311,13 +417,19 @@ void GooseBot::OnUnitCreated(const Unit* unit){
         case UNIT_TYPEID::ZERG_EXTRACTOR:
         case UNIT_TYPEID::ZERG_ROACHWARREN:
         case UNIT_TYPEID::ZERG_BANELINGNEST:
-        case UNIT_TYPEID::ZERG_HATCHERY:
         case UNIT_TYPEID::ZERG_INFESTATIONPIT:
         case UNIT_TYPEID::ZERG_ULTRALISKCAVERN:
+        case UNIT_TYPEID::ZERG_HATCHERY:
         {
             Units available_larva = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(larva));
-            Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
+            if (available_larva.size() > 0)
+            {
+                Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
+            }
         }
+
+        
+        
     }
     return;
 }

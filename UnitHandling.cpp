@@ -1,4 +1,5 @@
 #include "GooseBot.h"
+//DEV BRANCH
 
 // Distribute workers over vespene geysers for harvesting
 bool GooseBot::TryHarvestVespene() {
@@ -11,6 +12,7 @@ bool GooseBot::TryHarvestVespene() {
     const Unit* unit = GetRandomEntry(workers);
     const Unit* vespene_target = FindNearestAllied(UNIT_TYPEID::ZERG_EXTRACTOR, unit->pos);
 
+
     if (!vespene_target)
     {
         return false;
@@ -22,7 +24,17 @@ bool GooseBot::TryHarvestVespene() {
     if (vespene_target->assigned_harvesters >= vespene_target->ideal_harvesters) {
         return false;
     }
-    
+
+    const Unit* closest_base = FindNearestAllied(baseTypes, vespene_target->pos);
+
+    if (closest_base != nullptr) {
+        if (closest_base->assigned_harvesters <= closest_base->ideal_harvesters) {
+            return false;
+        }
+    }
+    if (vespene_target->assigned_harvesters >= vespene_target->ideal_harvesters) {
+        return false;
+    }
     Actions()->UnitCommand(unit, ABILITY_ID::SMART, vespene_target);
     return true;
       

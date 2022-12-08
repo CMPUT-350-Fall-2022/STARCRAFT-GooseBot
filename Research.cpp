@@ -1,4 +1,5 @@
 #include "GooseBot.h"
+//DEV BRANCH
 
 bool GooseBot::ResearchPhase(){
     if (CanAfford(UPGRADE_ID::OVERLORDSPEED)){
@@ -42,12 +43,11 @@ bool GooseBot::ResearchPhase(){
 }
 
 bool GooseBot::TryResearch(UNIT_TYPEID researcher_type, ABILITY_ID ability, UPGRADE_ID upgrade){
-    if (actionPending(ability)
-        || (std::find(upgraded.begin(), upgraded.end(), upgrade) == upgraded.end())) {
+    if (IsUpgraded(upgrade) || actionPending(ability)) {
         return false;
     }
     const Unit* researcher = FindUnit(researcher_type);
-    if (researcher != nullptr && CanAfford(upgrade)) {
+    if (researcher != nullptr) {
         Actions()->UnitCommand(researcher, ability);
         return true;
     }
