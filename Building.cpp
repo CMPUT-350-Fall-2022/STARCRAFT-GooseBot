@@ -134,7 +134,7 @@ bool GooseBot::TryBuildHatchery() {
 		}
 		else
 		{
-			std::cout << "Failed to build Hatchery" << std::endl;
+		
 		}
 	}
     // Query failed
