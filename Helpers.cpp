@@ -78,9 +78,9 @@ bool GooseBot::BuildPhase(){
         }
          else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
           
-            if(army_count>5){
-                return TryBuildHatchery();
-            }
+            
+             return TryBuildHatchery();
+            
          }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
