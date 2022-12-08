@@ -101,7 +101,7 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
             if (base)
             {
-                if ((base->ideal_harvesters <= base->assigned_harvesters - 2))     
+                if ((base->ideal_harvesters >= base->assigned_harvesters - 2))     
                 {   //build a worker
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                     break;
@@ -354,7 +354,8 @@ void GooseBot::OnUnitCreated(const Unit* unit){
             {
                 Actions()->UnitCommand(GetRandomEntry(available_larva), ABILITY_ID::TRAIN_DRONE);
             }
-        }        
+        }
+
         
         
     }
