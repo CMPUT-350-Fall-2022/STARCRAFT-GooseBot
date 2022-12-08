@@ -102,31 +102,31 @@ void GooseBot::OnUnitIdle(const Unit* unit) {
             const Unit *base = FindNearestAllied(baseTypes, unit->pos);
             if (base)
             {
-                if ((base->ideal_harvesters - 2 >= base->assigned_harvesters))     
+                if (((base->ideal_harvesters - 4) >= base->assigned_harvesters))     
                 {   //build a worker
                     Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
                     break;
                 }
             }
-            if (wave_counter <= ideal_waves){
-                if (mutal_count < mutal_cap)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
-                    break;
-                }
 
-                if (roach_count < roach_cap)
-                {
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
-                    break;
-                }
-                    //if our zergling count is less than or equal to 10
-                if (zergl_count < zergl_cap)
-                {   //try to train a zergling (this can't be done unless there is an existing spawning pool
-                    Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
-                    break;
-                }
+            if (mutal_count < mutal_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MUTALISK);
+                break;
             }
+
+            if (roach_count < roach_cap)
+            {
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ROACH);
+                break;
+            }
+                //if our zergling count is less than or equal to 10
+            if (zergl_count < zergl_cap)
+            {   //try to train a zergling (this can't be done unless there is an existing spawning pool
+                Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_ZERGLING);
+                break;
+            }
+        
            
         }else{
             //spawns overlord to increase supply cap when we need supply increase

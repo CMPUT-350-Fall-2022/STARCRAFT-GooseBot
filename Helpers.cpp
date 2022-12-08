@@ -61,14 +61,14 @@ bool GooseBot::BuildPhase(){
     }// Build next structure based on its custom build function, if it has one
     if (to_build != struct_targets.end()){
 
-        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < 2){
+        if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases+1){
             return TryMorphExtractor();
+        }
+        else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+            return TryBuildHatchery();
         }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
-        }
-        else if ((*to_build).first == UNIT_TYPEID::ZERG_HIVE){
-            return TryMorphHive();
         }
         else {
             return TryBuildStructure((*to_build).second, (*to_build).first);

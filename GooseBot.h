@@ -173,7 +173,6 @@ class GooseBot : public sc2::Agent {
         size_t melee_cap = 6;
         size_t army_cap = 20;
         size_t wave_counter = 0;
-        size_t ideal_waves = 0;
         Units enemy_base;
         Point2D last_base = Point2D(0,0);
         bool EnemyLocated = false;
