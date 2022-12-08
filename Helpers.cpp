@@ -45,6 +45,7 @@ bool GooseBot::BuildPhase(){
         auto found = std::find(built_types.begin(), built_types.end(), (*it).first);
         if (found == built_types.end()){
             to_build = it;
+            if (to_build == NULL) { return false; }
             if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
                 //only build new hatchery on proper phase or if bases count too low for higher phases
                 if (num_bases < 5){
@@ -61,9 +62,9 @@ bool GooseBot::BuildPhase(){
         if (build_phase != 1 && CountUnitType(UNIT_TYPEID::ZERG_EXTRACTOR) < num_bases*2){
             return TryMorphExtractor();
         }
-        // else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
-        //     return TryBuildHatchery();
-        // }
+         else if ((*to_build).first == UNIT_TYPEID::ZERG_HATCHERY){
+             return TryBuildHatchery();
+        }
         else if ((*to_build).first == UNIT_TYPEID::ZERG_LAIR){
             return TryMorphLair();
         }
